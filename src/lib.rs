@@ -1,7 +1,7 @@
 //! TODO
 
 // docs
-#![doc(html_root_url = "https://docs.rs/naan/0.1.5")]
+#![doc(html_root_url = "https://docs.rs/naan/0.1.6")]
 #![cfg_attr(any(docsrs, feature = "docs"), feature(doc_cfg))]
 // -
 // deny
