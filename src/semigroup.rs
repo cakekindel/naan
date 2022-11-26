@@ -18,8 +18,8 @@
 /// assert_eq!(a().append(b().append(c())), a().append(b()).append(c()));
 /// ```
 pub trait Semigroup {
-    /// See [`Semigroup`]
-    fn append(self, b: Self) -> Self;
+  /// See [`Semigroup`]
+  fn append(self, b: Self) -> Self;
 }
 
 /// Monoid extends [`Semigroup`] with the an "identity" value
@@ -39,6 +39,6 @@ pub trait Semigroup {
 /// assert_eq!(foo().append(String::identity()), foo());
 /// ```
 pub trait Monoid: Semigroup {
-    /// See [`Monoid`]
-    fn identity() -> Self;
+  /// See [`Monoid`]
+  fn identity() -> Self;
 }

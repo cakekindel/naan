@@ -39,12 +39,12 @@ pub(crate) enum Never {}
 
 /// Glob import that provides all of the `naan` typeclasses
 pub mod prelude {
-    pub use crate::alt::*;
-    pub use crate::apply::*;
-    pub use crate::fun::*;
-    pub use crate::functor::*;
-    pub use crate::semigroup::*;
-    pub use crate::{deriving, HKT1, HKT2};
+  pub use crate::alt::*;
+  pub use crate::apply::*;
+  pub use crate::fun::*;
+  pub use crate::functor::*;
+  pub use crate::semigroup::*;
+  pub use crate::{deriving, HKT1, HKT2};
 }
 
 /// A marker that points to a type with 1 generic
@@ -65,8 +65,8 @@ pub mod prelude {
 /// }
 /// ```
 pub trait HKT1 {
-    /// The generic type
-    type T<A>;
+  /// The generic type
+  type T<A>;
 }
 
 /// A marker that points to a type with 2 generic
@@ -87,8 +87,8 @@ pub trait HKT1 {
 /// }
 /// ```
 pub trait HKT2 {
-    /// The generic type
-    type T<A, B>;
+  /// The generic type
+  type T<A, B>;
 }
 
 /// Helper macro that allows deriving various typeclass instances from
@@ -151,141 +151,112 @@ macro_rules! deriving {
 
 #[cfg(test)]
 mod test {
-    use crate::{
-        impls,
-        prelude::curry2::{Applied0, Applied1, Curry2},
-    };
+  use ::std::string::String;
 
-    use ::std::string::String;
+  use super::prelude::*;
+  use crate::impls;
+  use crate::prelude::curry2::{Applied0, Applied1, Curry2};
 
-    use super::prelude::*;
+  #[test]
+  fn fmap() {
+    fn say_hello(s: &str) -> String {
+      format!("Hello, {s}!")
+    }
+    assert_eq!(vec!["Sally", "Turd"].fmap(say_hello),
+               vec!["Hello, Sally!", "Hello, Turd!"]);
 
-    #[test]
-    fn fmap() {
-        fn say_hello(s: &str) -> String {
-            format!("Hello, {s}!")
-        }
-        assert_eq!(
-            vec!["Sally", "Turd"].fmap(say_hello),
-            vec!["Hello, Sally!", "Hello, Turd!"]
-        );
+    assert_eq!(Option::pure("Fred").fmap(say_hello),
+               Option::pure("Hello, Fred!".into()));
 
-        assert_eq!(
-            Option::pure("Fred").fmap(say_hello),
-            Option::pure("Hello, Fred!".into())
-        );
+    assert_eq!(Result::<&str, ()>::pure("Fred").fmap(say_hello),
+               Ok("Hello, Fred!".into()));
+  }
 
-        assert_eq!(
-            Result::<&str, ()>::pure("Fred").fmap(say_hello),
-            Ok("Hello, Fred!".into())
-        );
+  #[test]
+  fn apply_curry() {
+    #![allow(non_camel_case_types)]
+
+    type addfn = fn(usize, usize) -> usize;
+    type add0 = Applied0<addfn, usize, usize, usize>;
+    type add1 = Applied1<addfn, usize, usize, usize>;
+    fn add(a: usize, b: usize) -> usize {
+      a + b
     }
 
-    #[test]
-    fn apply_curry() {
-        #![allow(non_camel_case_types)]
-
-        type addfn = fn(usize, usize) -> usize;
-        type add0 = Applied0<addfn, usize, usize, usize>;
-        type add1 = Applied1<addfn, usize, usize, usize>;
-        fn add(a: usize, b: usize) -> usize {
-            a + b
-        }
-
-        fn test_add_with<
-            Tusize: Clone + core::fmt::Debug + Eq + Applicative<F, usize>,
-            Tadd0: Applicative<F, add0>,
-            Tadd1: Applicative<F, add1>,
-            F: HKT1<T<usize> = Tusize> + HKT1<T<add0> = Tadd0> + HKT1<T<add1> = Tadd1>,
-        >(
-            empty: Tusize,
-        ) {
-            assert_eq!(
-                Tadd0::pure((add as addfn).curry())
-                    .apply(Tusize::pure(1))
-                    .apply(Tusize::pure(2)),
-                Tusize::pure(3)
-            );
-            assert_eq!(
-                Tadd0::pure((add as addfn).curry())
-                    .apply(Tusize::pure(1))
-                    .apply(empty.clone()),
-                empty.clone()
-            );
-            assert_eq!(
-                Tadd0::pure((add as addfn).curry())
-                    .apply(empty.clone())
-                    .apply(Tusize::pure(2)),
-                empty
-            );
-        }
-
-        test_add_with(Err(()));
-        test_add_with(None);
-        test_add_with(vec![]);
+    fn test_add_with<Tusize: Clone + core::fmt::Debug + Eq + Applicative<F, usize>,
+                         Tadd0: Applicative<F, add0>,
+                         Tadd1: Applicative<F, add1>,
+                         F: HKT1<T<usize> = Tusize>
+                           + HKT1<T<add0> = Tadd0>
+                           + HKT1<T<add1> = Tadd1>>(
+      empty: Tusize) {
+      assert_eq!(Tadd0::pure((add as addfn).curry()).apply(Tusize::pure(1))
+                                                    .apply(Tusize::pure(2)),
+                 Tusize::pure(3));
+      assert_eq!(Tadd0::pure((add as addfn).curry()).apply(Tusize::pure(1))
+                                                    .apply(empty.clone()),
+                 empty.clone());
+      assert_eq!(Tadd0::pure((add as addfn).curry()).apply(empty.clone())
+                                                    .apply(Tusize::pure(2)),
+                 empty);
     }
 
-    #[test]
-    fn apply() {
-        type StrToString = Box<dyn Fn(&str) -> String>;
+    test_add_with(Err(()));
+    test_add_with(None);
+    test_add_with(vec![]);
+  }
 
-        macro_rules! say_hello {
-            () => {
-                Box::new(|name: &str| format!("Hello, {name}!")) as StrToString
-            };
-        }
+  #[test]
+  fn apply() {
+    type StrToString = Box<dyn Fn(&str) -> String>;
 
-        macro_rules! say_goodbye {
-            () => {
-                Box::new(|name: &str| format!("Bye bye, {name}!")) as StrToString
-            };
-        }
-
-        assert_eq!(
-            vec![say_hello!(), say_goodbye!()].apply(vec!["Fred", "Harry"]),
-            vec![
-                "Hello, Fred!",
-                "Hello, Harry!",
-                "Bye bye, Fred!",
-                "Bye bye, Harry!"
-            ]
-        );
-
-        assert_eq!(
-            Option::pure(say_hello!()).apply(Some("Fred")),
-            Some("Hello, Fred!".to_string())
-        );
-
-        assert_eq!(
-            Ok(say_hello!()).apply(Result::<&str, ()>::Ok("Fred")),
-            Ok("Hello, Fred!".to_string())
-        );
+    macro_rules! say_hello {
+      () => {
+        Box::new(|name: &str| format!("Hello, {name}!")) as StrToString
+      };
     }
 
-    #[test]
-    fn alt() {
-        assert_eq!(vec![1u8, 2, 3].alt(vec![4u8]), vec![1u8, 2, 3, 4]);
-
-        assert_eq!(Some(1u8).alt(None), Some(1u8));
-        assert_eq!(None.alt(Some(1u8)), Some(1u8));
-
-        assert_eq!(Result::<usize, ()>::Ok(1).alt(Ok(2)), Ok(1));
-        assert_eq!(Result::<usize, ()>::Err(()).alt(Ok(2)), Ok(2));
+    macro_rules! say_goodbye {
+      () => {
+        Box::new(|name: &str| format!("Bye bye, {name}!")) as StrToString
+      };
     }
 
-    #[test]
-    fn plus() {
-        assert_eq!(Option::<u8>::empty(), None);
-        assert_eq!(Vec::<u8>::empty(), vec![]);
-    }
+    assert_eq!(vec![say_hello!(), say_goodbye!()].apply(vec!["Fred", "Harry"]),
+               vec!["Hello, Fred!",
+                    "Hello, Harry!",
+                    "Bye bye, Fred!",
+                    "Bye bye, Harry!"]);
 
-    #[test]
-    fn semigroup() {
-        assert_eq!(
-            Some("foo".to_string()).append(Some("bar".to_string())),
-            Some("foobar".into())
-        );
-        assert_eq!(Vec::<u8>::identity().append(vec![0]), vec![0]);
-        assert_eq!("foo".to_string().append("bar".into()), "foobar".to_string());
-    }
+    assert_eq!(Option::pure(say_hello!()).apply(Some("Fred")),
+               Some("Hello, Fred!".to_string()));
+
+    assert_eq!(Ok(say_hello!()).apply(Result::<&str, ()>::Ok("Fred")),
+               Ok("Hello, Fred!".to_string()));
+  }
+
+  #[test]
+  fn alt() {
+    assert_eq!(vec![1u8, 2, 3].alt(vec![4u8]), vec![1u8, 2, 3, 4]);
+
+    assert_eq!(Some(1u8).alt(None), Some(1u8));
+    assert_eq!(None.alt(Some(1u8)), Some(1u8));
+
+    assert_eq!(Result::<usize, ()>::Ok(1).alt(Ok(2)), Ok(1));
+    assert_eq!(Result::<usize, ()>::Err(()).alt(Ok(2)), Ok(2));
+  }
+
+  #[test]
+  fn plus() {
+    assert_eq!(Option::<u8>::empty(), None);
+    assert_eq!(Vec::<u8>::empty(), vec![]);
+  }
+
+  #[test]
+  fn semigroup() {
+    assert_eq!(Some("foo".to_string()).append(Some("bar".to_string())),
+               Some("foobar".into()));
+    assert_eq!(Vec::<u8>::identity().append(vec![0]), vec![0]);
+    assert_eq!("foo".to_string().append("bar".into()), "foobar".to_string());
+  }
 }

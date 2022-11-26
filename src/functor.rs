@@ -3,11 +3,10 @@ use crate::prelude::*;
 /// [`Functor`], but specialized to know at compile-time
 /// that the mapping function will only be called one time.
 pub trait FunctorOnce<F, A>
-where
-    F: HKT1<T<A> = Self>,
+  where F: HKT1<T<A> = Self>
 {
-    /// See [`FunctorOnce`]
-    fn fmap1<B>(self, f: impl F1Once<A, B>) -> F::T<B>;
+  /// See [`FunctorOnce`]
+  fn fmap1<B>(self, f: impl F1Once<A, B>) -> F::T<B>;
 }
 
 /// Functor adds a mapping operation to generic types.
@@ -34,12 +33,12 @@ where
 ///   }
 /// }
 ///
-/// assert_eq!(Container(0u8).fmap(|n| n + 1).fmap(|n: u8| n.to_string()), Container("1".to_string()))
+/// assert_eq!(Container(0u8).fmap(|n| n + 1).fmap(|n: u8| n.to_string()),
+///            Container("1".to_string()))
 /// ```
 pub trait Functor<F, A>
-where
-    F: HKT1<T<A> = Self>,
+  where F: HKT1<T<A> = Self>
 {
-    /// See [`Functor`]
-    fn fmap<B>(self, f: impl F1<A, B>) -> F::T<B>;
+  /// See [`Functor`]
+  fn fmap<B>(self, f: impl F1<A, B>) -> F::T<B>;
 }
