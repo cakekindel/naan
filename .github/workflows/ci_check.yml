@@ -32,4 +32,3 @@ jobs:
 
     - name: check
       run: 'cargo make ci'
-      working-directory: 'toad-msg'
