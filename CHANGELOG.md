@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.5 (2022-11-26)
+
+
+### Features
+
+* Foldable.length ([c2cb0ae](https://github.com/cakekindel/naan/commit/c2cb0ae3ed575b554513b3b962edb0302e96fc4d))
+
 ### 0.1.4 (2022-11-26)
 
 ### 0.1.3 (2022-11-26)
