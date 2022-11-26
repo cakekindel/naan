@@ -195,6 +195,15 @@ pub trait Foldable<F, A>
   }
 
   /// Test if the structure contains a value `a`
+  ///
+  /// ```
+  /// use naan::prelude::*;
+  ///
+  /// let strings = vec![format!("a"), format!("b"), format!("c")];
+  ///
+  /// assert_eq!(strings.contains(&format!("a")), true);
+  /// assert_eq!(strings.contains(&format!("d")), false);
+  /// ```
   fn contains<'a>(&'a self, a: &'a A) -> bool
     where &'a A: PartialEq,
           A: 'a
@@ -203,14 +212,31 @@ pub trait Foldable<F, A>
   }
 
   /// Test if the structure does not contain a value `a`
+  ///
+  /// ```
+  /// use naan::prelude::*;
+  ///
+  /// let strings = vec![format!("a"), format!("b"), format!("c")];
+  ///
+  /// assert_eq!(strings.not_contains(&format!("a")), false);
+  /// assert_eq!(strings.not_contains(&format!("d")), true);
+  /// ```
   fn not_contains<'a>(&'a self, a: &'a A) -> bool
     where &'a A: PartialEq,
           A: 'a
   {
-    self.all(|cur| cur != a)
+    !self.contains(a)
   }
 
   /// Test if any element in the structure satisfies a predicate `f`
+  ///
+  /// ```
+  /// use naan::prelude::*;
+  ///
+  /// let strings = vec![format!("ab"), format!("cde")];
+  ///
+  /// assert_eq!(strings.any(|s: &String| s.len() > 2), true);
+  /// ```
   fn any<'a, P>(&'a self, f: P) -> bool
     where P: F1<&'a A, bool>,
           A: 'a
@@ -220,6 +246,14 @@ pub trait Foldable<F, A>
   }
 
   /// Test if every element in the structure satisfies a predicate `f`
+  ///
+  /// ```
+  /// use naan::prelude::*;
+  ///
+  /// let strings = vec![format!("ab"), format!("cde")];
+  ///
+  /// assert_eq!(strings.all(|s: &String| s.len() < 4), true);
+  /// ```
   fn all<'a, P>(&'a self, f: P) -> bool
     where P: F1<&'a A, bool>,
           A: 'a
@@ -229,6 +263,13 @@ pub trait Foldable<F, A>
   }
 
   /// Test if the structure is empty
+  ///
+  /// ```
+  /// use naan::prelude::*;
+  ///
+  /// assert_eq!(Vec::<()>::new().is_empty(), true);
+  /// assert_eq!(vec![()].is_empty(), false);
+  /// ```
   fn is_empty(&self) -> bool {
     self.foldl_ref(|_, _| true, false)
   }
