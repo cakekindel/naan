@@ -262,6 +262,18 @@ pub trait Foldable<F, A>
                    true)
   }
 
+  /// Get the number of elements contained within the structure
+  ///
+  /// ```
+  /// use naan::prelude::*;
+  ///
+  /// assert_eq!(Vec::<()>::new().length(), 0);
+  /// assert_eq!(vec![(), (), ()].length(), 3);
+  /// ```
+  fn length(&self) -> usize {
+    self.foldl_ref(|n: usize, _| n + 1, 0usize)
+  }
+
   /// Test if the structure is empty
   ///
   /// ```
@@ -271,6 +283,6 @@ pub trait Foldable<F, A>
   /// assert_eq!(vec![()].is_empty(), false);
   /// ```
   fn is_empty(&self) -> bool {
-    self.foldl_ref(|_, _| true, false)
+    self.length() == 0
   }
 }
