@@ -33,10 +33,19 @@ pub trait Semigroup {
 /// ```
 /// use naan::prelude::*;
 ///
-/// let foo = || "foo".to_string();
+/// assert_eq!(String::from("hello").append(String::identity()),
+///            String::identity().append(String::from("hello")));
 ///
-/// assert_eq!(String::identity().append(foo()), foo());
-/// assert_eq!(foo().append(String::identity()), foo());
+/// // Generalized:
+/// fn assert_monoid_identity<T>(t: T)
+///   where T: PartialEq + core::fmt::Debug + Clone + Monoid
+/// {
+///   assert_eq!(t.clone().append(T::identity()), t.clone());
+///   assert_eq!(T::identity().append(t.clone()), t);
+/// }
+///
+/// assert_monoid_identity(String::from("hello"));
+/// assert_monoid_identity(vec!["hello"]);
 /// ```
 pub trait Monoid: Semigroup {
   /// See [`Monoid`]

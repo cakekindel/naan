@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use super::arg::Arg;
-use super::{F1Once, F2Once, F3Once, Just, Nothing, F1};
+use super::{F1Once, F3Once, Just, Nothing, F1};
 
 /// A curried function that accepts 3 arguments and has not been called with either.
 pub type Applied0<F, A, B, C, D> = Curry3<F, Nothing<A>, Nothing<B>, Nothing<C>, D>;
