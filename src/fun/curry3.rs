@@ -4,12 +4,10 @@ use super::arg::Arg;
 use super::{F1Once, F2Once, F3Once, Just, Nothing, F1};
 
 /// A curried function that accepts 3 arguments and has not been called with either.
-pub type Applied0<F, A, B, C, D> =
-  Curry3<F, Nothing<A>, Nothing<B>, Nothing<C>, D>;
+pub type Applied0<F, A, B, C, D> = Curry3<F, Nothing<A>, Nothing<B>, Nothing<C>, D>;
 
 /// A curried function that accepts 3 arguments and has been called with the first argument.
-pub type Applied1<F, A, B, C, D> =
-  Curry3<F, Just<A>, Nothing<B>, Nothing<C>, D>;
+pub type Applied1<F, A, B, C, D> = Curry3<F, Just<A>, Nothing<B>, Nothing<C>, D>;
 
 /// A curried function that accepts 3 arguments and has been called with the first & second arguments.
 pub type Applied2<F, A, B, C, D> = Curry3<F, Just<A>, Just<B>, Nothing<C>, D>;
@@ -63,8 +61,8 @@ impl<F, A, B, C, D> F1<A, Applied1<F, A, B, C, D>> for Applied0<F, A, B, C, D>
   }
 }
 
-impl<F, A, B, C, D> F1Once<A, Applied1<F, A, B, C, D>>
-  for Applied0<F, A, B, C, D> where F: FnOnce(A, B, C) -> D
+impl<F, A, B, C, D> F1Once<A, Applied1<F, A, B, C, D>> for Applied0<F, A, B, C, D>
+  where F: FnOnce(A, B, C) -> D
 {
   fn call1(self, a: A) -> Applied1<F, A, B, C, D> {
     Applied1::<F, A, B, C, D> { a: Just(a),
@@ -86,8 +84,8 @@ impl<F, A, B, C, D> F1<B, Applied2<F, A, B, C, D>> for Applied1<F, A, B, C, D>
   }
 }
 
-impl<F, A, B, C, D> F1Once<B, Applied2<F, A, B, C, D>>
-  for Applied1<F, A, B, C, D> where F: FnOnce(A, B, C) -> D
+impl<F, A, B, C, D> F1Once<B, Applied2<F, A, B, C, D>> for Applied1<F, A, B, C, D>
+  where F: FnOnce(A, B, C) -> D
 {
   fn call1(self, b: B) -> Applied2<F, A, B, C, D> {
     Applied2::<F, A, B, C, D> { a: self.a,
@@ -107,8 +105,7 @@ impl<F, A, B, C, D> F1<C, D> for Applied2<F, A, B, C, D>
   }
 }
 
-impl<F, A, B, C, D> F1Once<C, D> for Applied2<F, A, B, C, D>
-  where F: FnOnce(A, B, C) -> D
+impl<F, A, B, C, D> F1Once<C, D> for Applied2<F, A, B, C, D> where F: FnOnce(A, B, C) -> D
 {
   fn call1(self, c: C) -> D {
     (self.f)(self.a.0, self.b.0, c)

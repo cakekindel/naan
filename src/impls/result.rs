@@ -54,3 +54,23 @@ impl<A, E> Alt<hkt::ResultOk<E>, A> for Result<A, E> {
     self.or(b)
   }
 }
+
+impl<A, E> FoldableOnce<hkt::ResultOk<E>, A> for Result<A, E> {
+  fn fold1<B, BAB>(self, f: BAB, b: B) -> B
+    where BAB: F2Once<B, A, B>
+  {
+    self.ok().fold1(f, b)
+  }
+
+  fn fold1_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+    where BAB: F2Once<B, &'a A, B>,
+          A: 'a
+  {
+    match self {
+      | Ok(a) => f.call1(b, a),
+      | Err(_) => b,
+    }
+  }
+}
+
+deriving!(impl<E> Foldable<hkt::ResultOk<E>, A> for Result<A, E> {..FoldableOnce});

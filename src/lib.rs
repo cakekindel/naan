@@ -23,6 +23,9 @@ pub mod alt;
 /// Apply, Applicative
 pub mod apply;
 
+/// Foldable
+pub mod fold;
+
 /// Functions
 pub mod fun;
 
@@ -41,6 +44,7 @@ pub(crate) enum Never {}
 pub mod prelude {
   pub use crate::alt::*;
   pub use crate::apply::*;
+  pub use crate::fold::*;
   pub use crate::fun::*;
   pub use crate::functor::*;
   pub use crate::semigroup::*;
@@ -147,6 +151,31 @@ macro_rules! deriving {
       }
     }
   };
+  (impl$(<$($vars:ident),+>)? Foldable<$hkt:ty, $a:ident> for $t:ty {..FoldableOnce}) => {
+    impl<$a, $($($vars),+)?> Foldable<$hkt, $a> for $t {
+      fn foldl<B, BAB>(self, f: BAB, b: B) -> B
+      where BAB: F2<B, A, B> {
+        self.fold1(f, b)
+      }
+
+      fn foldr<B, ABB>(self, f: ABB, b: B) -> B
+      where ABB: F2<A, B, B> {
+        self.fold1(|a, b| f.call(b, a), b)
+      }
+
+
+  /// Fold the data structure from left -> right
+  fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+  where BAB: F2<B, &'a A, B>, A: 'a {
+    self.fold1_ref(f, b)
+  }
+
+  /// Fold the data structure from right -> left
+  fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
+    where ABB: F2<&'a A, B, B>, A: 'a {
+    self.fold1_ref(|a, b| f.call(b, a), b)
+    }}
+  };
 }
 
 #[cfg(test)]
@@ -186,9 +215,7 @@ mod test {
     fn test_add_with<Tusize: Clone + core::fmt::Debug + Eq + Applicative<F, usize>,
                          Tadd0: Applicative<F, add0>,
                          Tadd1: Applicative<F, add1>,
-                         F: HKT1<T<usize> = Tusize>
-                           + HKT1<T<add0> = Tadd0>
-                           + HKT1<T<add1> = Tadd1>>(
+                         F: HKT1<T<usize> = Tusize> + HKT1<T<add0> = Tadd0> + HKT1<T<add1> = Tadd1>>(
       empty: Tusize) {
       assert_eq!(Tadd0::pure((add as addfn).curry()).apply(Tusize::pure(1))
                                                     .apply(Tusize::pure(2)),

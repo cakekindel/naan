@@ -64,3 +64,26 @@ impl<A> Monoid for Option<A> where A: Semigroup
     None
   }
 }
+
+impl<A> FoldableOnce<hkt::Option, A> for Option<A> {
+  fn fold1<B, BAB>(self, f: BAB, b: B) -> B
+    where BAB: F2Once<B, A, B>
+  {
+    match self {
+      | Some(a) => f.call1(b, a),
+      | None => b,
+    }
+  }
+
+  fn fold1_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+    where BAB: F2Once<B, &'a A, B>,
+          A: 'a
+  {
+    match self {
+      | Some(a) => f.call1(b, a),
+      | None => b,
+    }
+  }
+}
+
+deriving!(impl Foldable<hkt::Option, A> for Option<A> {..FoldableOnce});

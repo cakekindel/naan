@@ -47,3 +47,31 @@ deriving!(impl Plus<hkt::Vec, A> for Vec<A> {..Default});
 
 deriving!(impl<A> Semigroup for Vec<A> {..Alt});
 deriving!(impl<A> Monoid for Vec<A> {..Default});
+
+impl<A> Foldable<hkt::Vec, A> for Vec<A> {
+  fn foldl<B, BAB>(self, f: BAB, b: B) -> B
+    where BAB: F2<B, A, B>
+  {
+    self.into_iter().fold(b, |b, a| f.call(b, a))
+  }
+
+  fn foldr<B, ABB>(self, f: ABB, b: B) -> B
+    where ABB: F2<A, B, B>
+  {
+    self.into_iter().rfold(b, |b, a| f.call(a, b))
+  }
+
+  fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+    where BAB: F2<B, &'a A, B>,
+          A: 'a
+  {
+    self.iter().fold(b, |b, a| f.call(b, a))
+  }
+
+  fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
+    where ABB: F2<&'a A, B, B>,
+          A: 'a
+  {
+    self.iter().rfold(b, |b, a| f.call(a, b))
+  }
+}

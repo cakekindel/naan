@@ -1,5 +1,5 @@
 # General
-max_width = 80
+max_width = 100
 newline_style = "Unix"
 tab_spaces = 2
 indent_style = "Visual"
