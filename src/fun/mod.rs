@@ -1,22 +1,40 @@
 use curry2::{Applied0, Curry2};
 
+/// Currying functions with 2 arguments
 pub mod curry2;
 
+/// A function that accepts 1 argument
+/// and can be called at most once.
 pub trait F1Once<A, B> {
+    /// Call the function
     fn call1(self, a: A) -> B;
 }
 
+/// A function that accepts 2 arguments
+/// and can be called at most once.
 pub trait F2Once<A, B, C>: Sized {
+    /// The concrete type that `curry` returns.
     type Curried;
+
+    /// Call the function
     fn call1(self, a: A, b: B) -> C;
+
+    /// Curry this function, transforming it from
+    /// `fn(A, B) -> C` to `fn(A) -> fn(B) -> C`
     fn curry(self) -> Self::Curried;
 }
 
+/// A function that accepts 1 argument
+/// and can be called any number of times.
 pub trait F1<A, B>: F1Once<A, B> {
+    /// Call the function
     fn call(&self, a: A) -> B;
 }
 
+/// A function that accepts 2 arguments
+/// and can be called any number of times.
 pub trait F2<A, B, C>: F2Once<A, B, C> {
+    /// Call the function
     fn call(&self, a: A, b: B) -> C;
 }
 

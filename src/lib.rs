@@ -1,31 +1,115 @@
+//! TODO
+
+// docs
+#![doc(html_root_url = "https://docs.rs/naan/0.1.0")]
+#![cfg_attr(any(docsrs, feature = "docs"), feature(doc_cfg))]
+// -
+// deny
+#![warn(missing_docs)]
+#![cfg_attr(not(test), deny(unsafe_code))]
+// -
+// warnings
+#![cfg_attr(not(test), warn(unreachable_pub))]
+// -
+// features
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(feature = "alloc")]
+extern crate alloc as std_alloc;
+
+/// Alt, Plus
 pub mod alt;
+
+/// Apply, Applicative
 pub mod apply;
+
+/// Functions
 pub mod fun;
+
+/// Functor
 pub mod functor;
+
+/// Implementors
 pub mod impls;
+
+/// Semigroup, Monoid
 pub mod semigroup;
 
+pub(crate) enum Never {}
+
+/// Glob import that provides all of the `naan` typeclasses
 pub mod prelude {
     pub use crate::alt::*;
     pub use crate::apply::*;
     pub use crate::fun::*;
     pub use crate::functor::*;
     pub use crate::semigroup::*;
-    pub use crate::{deriving, HKT1, HKT2, HKT3};
+    pub use crate::{deriving, HKT1, HKT2};
 }
 
+/// A marker that points to a type with 1 generic
+/// parameter.
+///
+/// ```
+/// use naan::prelude::*;
+///
+/// enum Maybe<A> {
+///   Just(A),
+///   Nothing,
+/// }
+///
+/// struct MaybeHKT;
+///
+/// impl HKT1 for MaybeHKT {
+///   type T<A> = Maybe<A>;
+/// }
+/// ```
 pub trait HKT1 {
+    /// The generic type
     type T<A>;
 }
 
+/// A marker that points to a type with 2 generic
+/// parameters.
+///
+/// ```
+/// use naan::prelude::*;
+///
+/// enum Either<A, B> {
+///   Left(A),
+///   Right(B),
+/// }
+///
+/// struct EitherHKT;
+///
+/// impl HKT2 for EitherHKT {
+///   type T<A, B> = Either<A, B>;
+/// }
+/// ```
 pub trait HKT2 {
+    /// The generic type
     type T<A, B>;
 }
 
-pub trait HKT3 {
-    type T<A, B, C>;
-}
-
+/// Helper macro that allows deriving various typeclass instances from
+/// other traits or typeclasses.
+///
+/// e.g. Functor can use the implementation for FunctorOnce, Plus can use Default.
+///
+/// ```
+/// use naan::prelude::*;
+///
+/// #[derive(Default)]
+/// pub struct Foo(String);
+///
+/// impl Semigroup for Foo {
+///   fn append(self, other: Self) -> Self {
+///     Foo(self.0.append(other.0))
+///   }
+/// }
+///
+/// deriving!(impl Monoid for Foo {..Default});
+/// ```
 #[macro_export]
 macro_rules! deriving {
   (impl$(<$($vars:ident),+>)? Functor<$hkt:ty, $a:ident> for $t:ty {..FunctorOnce}) => {
@@ -71,6 +155,8 @@ mod test {
         impls,
         prelude::curry2::{Applied0, Applied1, Curry2},
     };
+
+    use ::std::string::String;
 
     use super::prelude::*;
 

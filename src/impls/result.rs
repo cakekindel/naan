@@ -1,15 +1,23 @@
 use crate::prelude::*;
 
+/// Result Kinds
 pub mod hkt {
     use std::marker::PhantomData;
 
     use super::*;
 
+    /// [`core::result::Result`] lifted to an HKT1
+    /// with the error type pinned to some `E`.
+    ///
+    /// (Kind `Type -> Type`)
     pub struct ResultOk<E>(PhantomData<E>);
     impl<E> HKT1 for ResultOk<E> {
         type T<A> = ::std::result::Result<A, E>;
     }
 
+    /// [`core::result::Result`] lifted to an HKT2
+    ///
+    /// (Kind `Type -> Type -> Type`)
     pub struct Result;
     impl HKT2 for Result {
         type T<A, B> = ::std::result::Result<A, B>;

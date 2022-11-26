@@ -1,8 +1,12 @@
 use crate::prelude::*;
 
+/// Vec Kinds
 pub mod hkt {
     use super::*;
 
+    /// [`std::vec::Vec`] lifted to an HKT1
+    ///
+    /// (Kind `Type -> Type`)
     pub struct Vec;
     impl HKT1 for Vec {
         type T<A> = ::std::vec::Vec<A>;

@@ -1,0 +1,45 @@
+[env]
+RUST_BACKTRACE = 1
+
+[tasks.install-nightly]
+command = "rustup"
+args = ["toolchain", "install", "nightly", "--component", "rustfmt"]
+
+[tasks.install-fmt]
+command = "rustup"
+args = ["component", "add", "rustfmt", "--toolchain", "nightly"]
+dependencies = ["install-nightly"]
+
+[tasks.fmt]
+toolchain = "nightly"
+command = "cargo"
+args = ["fmt"]
+dependencies = ["install-fmt"]
+
+[tasks.test]
+command = "cargo"
+args = ["--locked", "test", "--", "--quiet", "--show-output"]
+
+[tasks.test-quiet]
+command = "cargo"
+args = ["--locked", "test", "--", "--quiet"]
+
+[tasks.fmt-check]
+toolchain = "nightly"
+command = "cargo"
+args = ["fmt", "--", "--check"]
+dependencies = ["install-fmt"]
+
+[tasks.clippy-check]
+command = "cargo"
+args = ["clippy"]
+
+[tasks.doc-check]
+command = "cargo"
+args = ["doc"]
+
+[tasks.ci]
+dependencies = ["test", "fmt-check", "clippy-check", "doc-check"]
+
+[tasks.update-readme]
+script = "cargo install cargo-readme && cargo readme > README.md"

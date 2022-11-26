@@ -1,0 +1,35 @@
+name: 'ci check'
+
+on:
+  push:
+    branches: [ 'main' ]
+  pull_request:
+    branches: [ 'main' ]
+
+jobs:
+  ci_check:
+    runs-on: 'ubuntu-latest'
+    steps:
+    - uses: 'actions/checkout@v2'
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.rustup/toolchains
+          ~/.cargo/bin
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: rust-${{ runner.os }}
+
+    - run: |
+        if [ ! -f ~/.cargo/bin/cargo-make ];
+        then
+          cargo install cargo-make
+        else
+          echo 'cargo-make already available.'
+        fi
+
+    - name: check
+      run: 'cargo make ci'
+      working-directory: 'toad-msg'

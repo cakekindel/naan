@@ -7,15 +7,22 @@ mod arg_state {
     pub trait ArgumentState<T> {}
 }
 
+/// Type-level marker indicating that the curried function has been applied with this argument
 pub struct Invkd<T>(PhantomData<T>);
+
+/// Type-level marker indicating that the curried function has **not** been applied with this argument
 pub struct Waiting<T>(PhantomData<T>);
 
 impl<T> ArgumentState<T> for Invkd<T> {}
 impl<T> ArgumentState<T> for Waiting<T> {}
 
+/// A curried function that accepts 2 arguments and has not been called with either.
 pub type Applied0<F, A, B, C> = Curry2<F, A, B, C, Waiting<A>, Waiting<B>>;
+
+/// A curried function that accepts 2 arguments and has been called with the first argument.
 pub type Applied1<F, A, B, C> = Curry2<F, A, B, C, Invkd<A>, Waiting<B>>;
 
+/// A curried function that accepts 2 arguments
 pub struct Curry2<F, A, B, C, SA, SB>
 where
     F: F2Once<A, B, C>,
@@ -49,6 +56,7 @@ impl<F, A, B, C> Applied0<F, A, B, C>
 where
     F: F2Once<A, B, C>,
 {
+    /// Curry a binary function
     pub fn curry(f: F) -> Self {
         Self {
             f,
@@ -57,6 +65,7 @@ where
         }
     }
 
+    /// Unwrap the `Curry2` wrapper, getting the inner function
     pub fn uncurry(self) -> F {
         self.f
     }

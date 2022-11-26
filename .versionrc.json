@@ -1,0 +1,18 @@
+{
+  "packageFiles": [
+    {
+      "filename": "Cargo.toml",
+      "updater": "../.utils/cargo-updater.js"
+    }
+  ],
+  "bumpFiles": [
+    {
+      "filename": "Cargo.toml",
+      "updater": "../.utils/cargo-updater.js"
+    },
+    {
+      "filename": "src/lib.rs",
+      "updater": "../.utils/html-root-updater.js"
+    }
+  ]
+}

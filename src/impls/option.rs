@@ -1,9 +1,13 @@
 use crate::prelude::*;
 
+/// Option Kinds
 pub mod hkt {
-    use crate::prelude::*;
+    use crate::{prelude::*, Never};
 
-    pub struct Option;
+    /// [`core::option::Option`] lifted to an HKT1
+    ///
+    /// (Kind `Type -> Type`)
+    pub struct Option(Never);
     impl HKT1 for Option {
         type T<A> = ::std::option::Option<A>;
     }

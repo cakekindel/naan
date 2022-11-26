@@ -1,0 +1,24 @@
+name: 'publish'
+
+on:
+  push:
+    tags: ['*']
+
+jobs:
+  publish:
+    runs-on: 'ubuntu-latest'
+    steps:
+    - uses: 'actions/checkout@v2'
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.rustup
+          ~/.cargo
+          target
+        key: ${{ runner.os }}-cargo
+
+    - name: publish
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_TOKEN }}
+      run: 'cargo publish'

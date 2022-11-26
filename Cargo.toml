@@ -6,4 +6,14 @@ description = "A fast, easy, and tasty functional programming prelude"
 authors = ["Orion Kindel <cakekindel@gmail.com>"]
 license = "MIT OR Apache-2.0"
 
+[badges]
+maintenance = { status = "actively-developed" }
+
+[features]
+default = ["std"]
+std = ["alloc"]
+alloc = []
+test = []
+docs = []
+
 [dependencies]

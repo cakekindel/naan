@@ -1,0 +1,59 @@
+name: 'bump'
+
+on:
+  push:
+    branches: [ 'main' ]
+
+jobs:
+  bump:
+    if: |
+         !startsWith(github.event.head_commit.message, 'bump')
+         && !startsWith(github.event.head_commit.message, 'ci')
+         && !startsWith(github.event.head_commit.message, 'chore')
+         && !startsWith(github.event.head_commit.message, '[NO_PUB]')
+    runs-on: 'ubuntu-latest'
+    steps:
+    - uses: 'actions/checkout@v2'
+      with:
+        token: ${{ secrets.GH_TOKEN }}
+
+    - run: |
+        git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+        git config --global user.name "${{ github.actor }}"
+
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.rustup
+          ~/.cargo
+          target
+        key: ${{ runner.os }}-cargo
+
+    - uses: 'actions/setup-node@v1'
+      with: { node-version: '14' }
+
+    # running `standard-version` will:
+    # - update CHANGELOG,
+    # - create version tag
+    # - create version commits
+
+    - name: bump
+      run: |
+        npx standard-version \
+          --releaseCommitMessageFormat 'chore(release): {{currentTag}}'
+
+    - name: 'update Cargo.lock'
+      run: 'cargo check'
+
+    - run: |
+        git add -A
+        git commit --amend --no-edit
+
+    - env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: 'git push'
+
+    # triggers publish
+    - env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: 'git push --tags'
