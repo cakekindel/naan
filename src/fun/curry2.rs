@@ -1,7 +1,8 @@
+use core::char::CharTryFromError;
 use std::marker::PhantomData;
 
 use super::arg::Arg;
-use super::{F1Once, F2Once, Just, Nothing, F1};
+use super::{F1Once, F2Once, Just, Nothing, F1, F2};
 
 /// A curried function that accepts 2 arguments and has not been called with either.
 pub type Applied0<F, A, B, C> = Curry2<F, Nothing<A>, Nothing<B>, C>;
@@ -19,8 +20,7 @@ pub struct Curry2<F, A, B, C> {
 impl<A, B, C, F> Clone for Curry2<F, A, B, C>
   where A: Arg + Clone,
         B: Arg,
-        C: Arg,
-        F: Clone + FnOnce(A, B) -> C
+        F: Clone + Fn(A::T, B::T) -> C
 {
   fn clone(&self) -> Self {
     Curry2 { f: self.f.clone(),

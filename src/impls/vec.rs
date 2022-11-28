@@ -20,12 +20,15 @@ impl<A> Functor<hkt::Vec, A> for Vec<A> {
 }
 
 impl<AB> Apply<hkt::Vec, AB> for Vec<AB> {
-  fn apply<A, B>(self, a: Vec<A>) -> Vec<B>
+  fn apply_clone_with<A, B, Cloner>(self,
+                                    a: <hkt::Vec as HKT1>::T<A>,
+                                    cloner: Cloner)
+                                    -> <hkt::Vec as HKT1>::T<B>
     where AB: F1<A, B>,
-          A: Clone
+          Cloner: for<'a> F1<&'a A, A>
   {
     self.into_iter()
-        .map(|f| a.iter().cloned().map(|a| f.call(a)).collect::<Vec<B>>())
+        .map(move |f| a.iter().map(|a| f.call(cloner.call(a))).collect::<Vec<B>>())
         .flatten()
         .collect()
   }
@@ -73,5 +76,51 @@ impl<A> Foldable<hkt::Vec, A> for Vec<A> {
           A: 'a
   {
     self.iter().rfold(b, |b, a| f.call(a, b))
+  }
+}
+
+#[allow(non_camel_case_types)]
+type append<T> = fn(T, Vec<T>) -> Vec<T>;
+
+/// curried [`fn@append`] waiting for both arguments
+#[allow(non_camel_case_types)]
+pub type append0<T> = curry2::Curry2<append<T>, Nothing<T>, Nothing<Vec<T>>, Vec<T>>;
+
+/// curried [`fn@append`] that has a T and is waiting for the Vec to push it to
+#[allow(non_camel_case_types)]
+pub type append1<T> = curry2::Curry2<append<T>, Just<T>, Nothing<Vec<T>>, Vec<T>>;
+
+/// Append an element to a vec
+pub fn append<T>(t: T, mut v: Vec<T>) -> Vec<T> {
+  v.push(t);
+  v
+}
+
+impl<A, B> Traversable<hkt::Vec, A, B, append1<B>> for Vec<A> {
+  fn traversem1<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<Vec<B>>
+    where Ap: HKT1,
+          Self: Foldable<hkt::Vec, A>,
+          Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
+          Ap::T<append1<B>>: Applicative<Ap, append1<B>> + ApplyOnce<Ap, append1<B>>,
+          Ap::T<Vec<B>>: Applicative<Ap, Vec<B>> + ApplyOnce<Ap, Vec<B>>,
+          AtoApOfB: F1<A, Ap::T<B>>,
+          hkt::Vec: HKT1<T<A> = Self>
+  {
+    self.foldl(|ap, a| f.call(a).fmap((append as append<B>).curry()).apply1(ap),
+               Ap::T::pure(vec![]))
+  }
+
+  fn traversemm<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<Vec<B>>
+    where Ap: HKT1,
+          Self: Foldable<hkt::Vec, A>,
+          B: Clone,
+          Ap::T<B>: Applicative<Ap, B>,
+          Ap::T<append1<B>>: Applicative<Ap, append1<B>>,
+          Ap::T<Vec<B>>: Applicative<Ap, Vec<B>>,
+          AtoApOfB: F1<A, Ap::T<B>>,
+          hkt::Vec: HKT1<T<A> = Self>
+  {
+    self.foldl(|ap, a| f.call(a).fmap((append as append<B>).curry()).apply(ap),
+               Ap::T::pure(vec![]))
   }
 }

@@ -24,7 +24,7 @@ pub trait Alt<F, A>
 ///
 /// # Laws
 /// The Plus identity value must be a no-op on either side
-/// of an [`alt`](Alt.alt), e.g.
+/// of an [`alt`](Alt::alt), e.g.
 ///
 /// ```
 /// use naan::prelude::*;

@@ -285,4 +285,21 @@ pub trait Foldable<F, A>
   fn is_empty(&self) -> bool {
     self.length() == 0
   }
+
+  /// Fold values until a match is found
+  fn find_map<AB, B>(self, f: AB) -> Option<B>
+    where Self: Sized,
+          AB: F1<A, Option<B>>
+  {
+    self.foldl(|found: Option<B>, a| found.fmap(Some).get_or(f.call(a)),
+               None)
+  }
+
+  /// Fold values until a match is found
+  fn find<P>(self, f: P) -> Option<A>
+    where Self: Sized,
+          P: for<'a> F1<&'a A, bool>
+  {
+    self.find_map(|a| if f.call(&a) { Some(a) } else { None })
+  }
 }

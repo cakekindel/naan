@@ -126,6 +126,7 @@ impl<F, A, B, C> F2<A, B, C> for F where F: Fn(A, B) -> C
 impl<F, A, B, C> F2Once<A, B, C> for F where F: FnOnce(A, B) -> C
 {
   type Curried = curry2::Applied0<Self, A, B, C>;
+
   fn call1(self, a: A, b: B) -> C {
     self(a, b)
   }

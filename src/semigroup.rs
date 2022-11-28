@@ -23,12 +23,12 @@ pub trait Semigroup {
 }
 
 /// Monoid extends [`Semigroup`] with the an "identity" value
-/// that [`append`](Semigroup.append)ing to a Semigroup will
+/// that [`append`](Semigroup::append)ing to a Semigroup will
 /// result in the same value.
 ///
 /// # Laws
 /// The Monoid identity value must be a no-op on either side
-/// of an [`append`](Semigroup.append), e.g.
+/// of an [`append`](Semigroup::append), e.g.
 ///
 /// ```
 /// use naan::prelude::*;

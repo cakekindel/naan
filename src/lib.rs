@@ -22,7 +22,6 @@ pub mod alt;
 
 /// Apply, Applicative
 pub mod apply;
-
 /// Foldable
 pub mod fold;
 
@@ -38,7 +37,23 @@ pub mod impls;
 /// Semigroup, Monoid
 pub mod semigroup;
 
+/// Traversable
+pub mod traverse;
+
 pub(crate) enum Never {}
+
+/// Re-exports of HKT markers for types that have provided implementations
+pub mod hkt {
+  pub use crate::impls::option::hkt::Option;
+  pub use crate::impls::result::hkt::ResultOk;
+  pub use crate::impls::vec::hkt::Vec;
+
+  /// `std::io`
+  pub mod io {
+    /// Result pinned to [`std::io::Error`]
+    pub type Result = crate::impls::result::hkt::ResultOk<std::io::Error>;
+  }
+}
 
 /// Glob import that provides all of the `naan` typeclasses
 pub mod prelude {
@@ -48,7 +63,8 @@ pub mod prelude {
   pub use crate::fun::*;
   pub use crate::functor::*;
   pub use crate::semigroup::*;
-  pub use crate::{deriving, HKT1, HKT2};
+  pub use crate::traverse::*;
+  pub use crate::{deriving, hkt, HKT1, HKT2};
 }
 
 /// A marker that points to a type with 1 generic
@@ -125,8 +141,11 @@ macro_rules! deriving {
   };
   (impl$(<$($vars:ident),+>)? Apply<$hkt:ty, $ab:ident> for $t:ty {..ApplyOnce}) => {
     impl<$ab, $($($vars),+)?> Apply<$hkt, $ab> for $t {
-      fn apply<_A, _B>(self, f: <$hkt as HKT1>::T<_A>) -> <$hkt as HKT1>::T<_B> where $ab: F1<_A, _B> {
-        self.apply1(f)
+  fn apply_clone_with<A, B, Cloner>(self, a: <$hkt as HKT1>::T<A>, _: Cloner) -> <$hkt as HKT1>::T<B>
+      where AB: F1<A, B>,
+            Cloner: for<'a> F1<&'a A, A>
+            {
+        self.apply1(a)
       }
     }
   };
@@ -175,6 +194,28 @@ macro_rules! deriving {
     where ABB: F2<&'a A, B, B>, A: 'a {
     self.fold1_ref(|a, b| f.call(b, a), b)
     }}
+  };
+  (impl$(<$($vars:ident),+>)? Traversable<$hkt:ty, $a:ident, $b:ident, $tf:ty> for $t:ty {..TraversableOnce}) => {
+    impl<$a, $b, $($($vars),+)?> Traversable<$hkt, $a, $b, $tf> for $t {
+  fn traversem1<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<<$hkt as HKT1>::T<B>>
+    where Ap: HKT1,
+      Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
+      Ap::T<$tf>: Applicative<Ap, $tf> + ApplyOnce<Ap, $tf>,
+      Ap::T<<$hkt as HKT1>::T<B>>: Applicative<Ap, <$hkt as HKT1>::T<B>> + ApplyOnce<Ap, <$hkt as HKT1>::T<B>>,
+      AtoApOfB: F1<A, Ap::T<B>> {
+        self.traverse11::<Ap, AtoApOfB>(f)
+      }
+
+  fn traversemm<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<<$hkt as HKT1>::T<B>>
+    where Ap: HKT1,
+      Ap::T<B>: Applicative<Ap, B>,
+      Ap::T<$tf>: Applicative<Ap, $tf>,
+      Ap::T<<$hkt as HKT1>::T<B>>: Applicative<Ap, <$hkt as HKT1>::T<B>>,
+      AtoApOfB: F1<A, Ap::T<B>>
+       {
+        self.traverse1m::<Ap, AtoApOfB>(f)
+      }
+    }
   };
 }
 

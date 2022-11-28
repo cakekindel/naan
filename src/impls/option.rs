@@ -87,3 +87,31 @@ impl<A> FoldableOnce<hkt::Option, A> for Option<A> {
 }
 
 deriving!(impl Foldable<hkt::Option, A> for Option<A> {..FoldableOnce});
+
+impl<A, B> TraversableOnce<hkt::Option, A, B, ()> for Option<A> {
+  fn traverse1m<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<Option<B>>
+    where Ap: HKT1,
+          Self: FoldableOnce<hkt::Option, A>,
+          Ap::T<B>: Applicative<Ap, B>,
+          Ap::T<()>: Applicative<Ap, ()>,
+          Ap::T<Option<B>>: Applicative<Ap, Option<B>>,
+          AtoApOfB: F1Once<A, Ap::T<B>>,
+          hkt::Option: HKT1<T<A> = Self>
+  {
+    match self {
+      | Some(a) => f.call1(a).fmap(|b| Some(b)),
+      | None => Ap::T::pure(None),
+    }
+  }
+
+  fn traverse11<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<Option<B>>
+    where Ap: HKT1,
+          Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
+          Ap::T<()>: Applicative<Ap, ()> + ApplyOnce<Ap, ()>,
+          Ap::T<Option<B>>: Applicative<Ap, Option<B>> + ApplyOnce<Ap, Option<B>>,
+          AtoApOfB: F1Once<A, Ap::T<B>>
+  {
+    self.traverse1m::<Ap, AtoApOfB>(f)
+  }
+}
+deriving!(impl Traversable<hkt::Option, A, B, ()> for Option<A> {..TraversableOnce});

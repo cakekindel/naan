@@ -74,8 +74,17 @@ pub trait Apply<F, AB>
 {
   /// See [`Apply`]
   fn apply<A, B>(self, a: F::T<A>) -> F::T<B>
+    where Self: Sized,
+          AB: F1<A, B>,
+          A: Clone
+  {
+    self.apply_clone_with(a, Clone::clone)
+  }
+
+  /// See [`Apply`]
+  fn apply_clone_with<A, B, Cloner>(self, a: F::T<A>, cloner: Cloner) -> F::T<B>
     where AB: F1<A, B>,
-          A: Clone;
+          Cloner: for<'a> F1<&'a A, A>;
 }
 
 /// Adds onto [`Apply`] the ability to lift a _value_
@@ -86,4 +95,11 @@ pub trait Applicative<F, A>
 {
   /// Lift `A` to `F<A>`
   fn pure(a: A) -> F::T<A>;
+
+  /// Append a single `A` to `F<A>`
+  fn append_one(self, a: A) -> Self
+    where Self: Sized + Semigroup
+  {
+    self.append(Self::pure(a))
+  }
 }

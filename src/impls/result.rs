@@ -74,3 +74,30 @@ impl<A, E> FoldableOnce<hkt::ResultOk<E>, A> for Result<A, E> {
 }
 
 deriving!(impl<E> Foldable<hkt::ResultOk<E>, A> for Result<A, E> {..FoldableOnce});
+
+impl<A, B, E> TraversableOnce<hkt::ResultOk<E>, A, B, ()> for Result<A, E>
+  where hkt::ResultOk<E>: HKT1<T<B> = Result<B, E>> + HKT1<T<A> = Result<A, E>>
+{
+  fn traverse1m<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<Result<B, E>>
+    where Ap: HKT1,
+          Ap::T<B>: Applicative<Ap, B>,
+          Ap::T<Result<B, E>>: Applicative<Ap, Result<B, E>>,
+          AtoApOfB: F1Once<A, Ap::T<B>>
+  {
+    match self {
+      | Ok(a) => f.call1(a).fmap(|b| Ok(b)),
+      | Err(e) => Ap::T::pure(Err(e)),
+    }
+  }
+
+  fn traverse11<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<Result<B, E>>
+    where Ap: HKT1,
+          Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
+          Ap::T<()>: Applicative<Ap, ()> + ApplyOnce<Ap, ()>,
+          Ap::T<Result<B, E>>: Applicative<Ap, Result<B, E>> + ApplyOnce<Ap, Result<B, E>>,
+          AtoApOfB: F1Once<A, Ap::T<B>>
+  {
+    self.traverse1m::<Ap, AtoApOfB>(f)
+  }
+}
+deriving!(impl<E> Traversable<hkt::ResultOk<E>, A, B, ()> for Result<A, E> {..TraversableOnce});
