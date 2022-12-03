@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.8 (2022-12-03)
+
+
+### Features
+
+* Monad, Compose ([89eb68f](https://github.com/cakekindel/naan/commit/89eb68fad4f254ebcbd737164579fddbcc78e2f5))
+
 ### 0.1.7 (2022-11-28)
 
 
