@@ -1,5 +1,5 @@
-[![crates.io](https://img.shields.io/crates/v/toad.svg)](https://crates.io/crates/toad)
-[![docs.rs](https://docs.rs/toad/badge.svg)](https://docs.rs/toad/latest)
+[![crates.io](https://img.shields.io/crates/v/naan.svg)](https://crates.io/crates/naan)
+[![docs.rs](https://docs.rs/naan/badge.svg)](https://docs.rs/naan/latest)
 {{badges}}
 
 # {{crate}}
