@@ -300,6 +300,6 @@ pub trait Foldable<F, A>
     where Self: Sized,
           P: for<'a> F1<&'a A, bool>
   {
-    self.find_map(|a| if f.call(&a) { Some(a) } else { None })
+    self.find_map(|a| Some(a).filter(|a| f.call(a)))
   }
 }

@@ -124,3 +124,17 @@ impl<A, B> Traversable<hkt::Vec, A, B, append1<B>> for Vec<A> {
                Ap::T::pure(vec![]))
   }
 }
+
+impl<A> Monad<hkt::Vec, A> for Vec<A> {
+  fn bind<B, AMB>(self, f: AMB) -> Vec<B>
+    where AMB: F1<A, Vec<B>>
+  {
+    let mut out = Vec::<B>::new();
+
+    for i in self {
+      Vec::append(&mut out, &mut f.call(i));
+    }
+
+    out
+  }
+}

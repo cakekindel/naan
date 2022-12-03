@@ -85,7 +85,7 @@ impl<A, B, E> TraversableOnce<hkt::ResultOk<E>, A, B, ()> for Result<A, E>
           AtoApOfB: F1Once<A, Ap::T<B>>
   {
     match self {
-      | Ok(a) => f.call1(a).fmap(|b| Ok(b)),
+      | Ok(a) => f.call1(a).fmap(Ok),
       | Err(e) => Ap::T::pure(Err(e)),
     }
   }
@@ -101,3 +101,12 @@ impl<A, B, E> TraversableOnce<hkt::ResultOk<E>, A, B, ()> for Result<A, E>
   }
 }
 deriving!(impl<E> Traversable<hkt::ResultOk<E>, A, B, ()> for Result<A, E> {..TraversableOnce});
+
+impl<A, E> MonadOnce<hkt::ResultOk<E>, A> for Result<A, E> {
+  fn bind1<B, AMB>(self, f: AMB) -> Result<B, E>
+    where AMB: F1Once<A, Result<B, E>>
+  {
+    self.and_then(|a| f.call1(a))
+  }
+}
+deriving!(impl<E> Monad<hkt::ResultOk<E>, A> for Result<A, E> {..MonadOnce});

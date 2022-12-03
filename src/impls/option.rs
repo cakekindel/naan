@@ -115,3 +115,12 @@ impl<A, B> TraversableOnce<hkt::Option, A, B, ()> for Option<A> {
   }
 }
 deriving!(impl Traversable<hkt::Option, A, B, ()> for Option<A> {..TraversableOnce});
+
+impl<A> MonadOnce<hkt::Option, A> for Option<A> {
+  fn bind1<B, AMB>(self, f: AMB) -> Option<B>
+    where AMB: F1Once<A, Option<B>>
+  {
+    self.and_then(|a| f.call1(a))
+  }
+}
+deriving!(impl Monad<hkt::Option, A> for Option<A> {..MonadOnce});

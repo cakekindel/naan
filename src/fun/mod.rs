@@ -1,7 +1,13 @@
 use core::marker::PhantomData;
+use core::ops::Deref;
 
 use curry2::Curry2;
 use curry3::Curry3;
+
+use self::compose::Compose;
+
+/// Function composition
+pub mod compose;
 
 /// Currying functions with 2 arguments
 pub mod curry2;
@@ -46,11 +52,159 @@ impl<T> arg::Arg for Nothing<T> {
   type T = T;
 }
 
+/// Type of [`fn@call_deref`]
+#[allow(non_camel_case_types)]
+pub type call_deref<F, A, B> = fn(f: F, a: A) -> B;
+
+/// Lift a function from `&ADeref -> B` to `A -> B`
+/// where `A` can [`Deref::deref`] as `ADeref`
+///
+/// Used by [`F1Once::chain_ref`].
+pub fn call_deref<F, A, ADeref: ?Sized, B>(f: F, a: A) -> B
+  where A: Deref<Target = ADeref>,
+        F: for<'a> F1Once<&'a ADeref, B>
+{
+  f.call1(a.deref())
+}
+
 /// A function that accepts 1 argument
 /// and can be called at most once.
 pub trait F1Once<A, B> {
   /// Call the function
   fn call1(self, a: A) -> B;
+
+  /// Create a new function that passes this one's output to `g`'s input
+  ///
+  /// (Left-to-right function composition)
+  ///
+  /// ```no_run
+  /// use std::path::{Path, PathBuf};
+  ///
+  /// use naan::prelude::*;
+  ///
+  /// fn ensure_trailing_slash(s: &str) -> String {
+  ///   if !s.ends_with("/") {
+  ///     format!("{s}/")
+  ///   } else {
+  ///     s.into()
+  ///   }
+  /// }
+  ///
+  /// fn main() {
+  ///   let dir_contains_readme = ensure_trailing_slash.chain(|path| format!("{path}README.md"))
+  ///                                                  .chain(PathBuf::from)
+  ///                                                  .chain_ref(Path::exists);
+  ///
+  ///   assert!(dir_contains_readme.call("toad-lib/toad/toad"));
+  ///   assert!(!dir_contains_readme.call("toad-lib/toad"));
+  /// }
+  /// ```
+  ///
+  /// ## A Note on Type Errors
+  /// TLDR: try `chain_ref` if the function is a receiver of `&self` or a similar shape,
+  /// and if that fails wrap the composed function with `Box::new(...) as Box<dyn F1<.., ..>>`
+  /// for more valuable compiler errors.
+  ///
+  /// <details>
+  ///
+  /// The type errors from chained composition type errors tend to be very complex.
+  ///
+  /// While debugging type errors like this, it may help to use `Box<dyn F1>` to
+  /// provide more type information to the compiler, e.g.
+  ///
+  /// ```compile_fail
+  /// use std::path::{Path, PathBuf};
+  ///
+  /// use naan::prelude::*;
+  ///
+  /// fn ensure_trailing_slash(s: &str) -> String {
+  ///   if !s.ends_with("/") {
+  ///     format!("{s}/")
+  ///   } else {
+  ///     s.into()
+  ///   }
+  /// }
+  ///
+  /// fn main() {
+  ///   let dir_contains_readme =
+  ///     compose2(ensure_trailing_slash, |path| format!("{path}README.md")).chain(PathBuf::from)
+  ///                                                                       .chain(Path::exists);
+  ///
+  ///   assert!(dir_contains_readme.call("toad-lib/toad/toad"));
+  /// }
+  /// ```
+  /// produces type error:
+  /// ```text
+  /// error[E0599]: the method `call1` exists for struct `Compose<Compose<Compose<..>, ..>, .., ..>`, but its trait bounds were not satisfied
+  ///   --> src/fun/mod.rs:37:31
+  ///      |
+  ///   19 |   assert!(dir_contains_readme.call1("toad-lib/toad/toad"));
+  ///      |                               ^^^^^ method cannot be called on `Compose<Compose<Compose<..>, ..>, .., ..>` due to unsatisfied trait bounds
+  /// ```
+  ///
+  /// when we box it, the compiler much more helpfully tells us that the issue is that `Path::exists` is `&Path -> bool`, rather than `PathBuf -> bool`:
+  ///
+  /// ```compile_fail
+  /// # use std::path::{Path, PathBuf};
+  /// # use naan::prelude::*;
+  /// # fn ensure_trailing_slash(s: &str) -> String {
+  /// #   if !s.ends_with("/") {
+  /// #     format!("{s}/")
+  /// #   } else {
+  /// #     s.into()
+  /// #   }
+  /// # }
+  /// fn main() {
+  ///   let dir_contains_readme =
+  ///     compose2(ensure_trailing_slash, |path| format!("{path}README.md")).chain(PathBuf::from)
+  ///                                                                       .chain(Path::exists);
+  ///
+  ///   let dir_contains_readme_boxed: Box<dyn F1<&str, bool>> = Box::new(dir_contains_readme) as _;
+  ///
+  ///   assert!(dir_contains_readme_boxed.call("toad-lib/toad/toad"));
+  /// }
+  /// ```
+  /// yields
+  /// ```text
+  /// error[E0631]: type mismatch in function arguments
+  ///   --> src/fun/compose.rs:91:75
+  ///    |
+  /// 17 | ...                   .chain(Path::exists);
+  ///    |                        ----- ^^^^^^^^^^^^
+  ///    |                        |     |
+  ///    |                        |     expected due to this
+  ///    |                        |     found signature defined here
+  ///    |                        required by a bound introduced by this call
+  ///    |
+  ///    = note: expected function signature `fn(PathBuf) -> _`
+  ///               found function signature `for<'r> fn(&'r Path) -> _`
+  ///    = note: required for `for<'r> fn(&'r Path) -> bool {Path::exists}` to implement `F1Once<PathBuf, _>`
+  /// ```
+  /// Once all type errors are resolved, the Box debugging can be undone and you can use the concrete
+  /// nested `Compose` types.
+  /// </details>
+  fn chain<G, C>(self, g: G) -> Compose<Self, G, B>
+    where Self: Sized,
+          G: F1Once<B, C>
+  {
+    Compose::compose(self, g)
+  }
+
+  /// [`chain`](F1Once::chain) that passes a reference to this function's return type
+  /// to function `g`.
+  ///
+  /// Also performs [`Deref::deref`], allowing you to do things like pipe a `Vec`
+  /// to a function expecting a slice or `String` to a function expecting `&str`.
+  fn chain_ref<G, BDeref: ?Sized, C>(
+    self,
+    g: G)
+    -> Compose<Self, curry2::Applied1<call_deref<G, B, C>, G, B, C>, B>
+    where Self: Sized,
+          G: for<'a> F1Once<&'a BDeref, C>,
+          B: Deref<Target = BDeref>
+  {
+    Compose::compose(self, (call_deref as call_deref<G, B, C>).curry().call(g))
+  }
 }
 
 /// A function that accepts 2 arguments

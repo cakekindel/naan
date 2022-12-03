@@ -6,7 +6,7 @@ use crate::prelude::*;
 /// e.g. `Vec<Result<T, E>>` to `Result<Vec<T>, E>`
 ///
 /// ```
-/// use std::fs::{DirEntry, File, FileType};
+/// use std::fs::{DirEntry, File, FileType, ReadDir};
 /// use std::io;
 /// use std::path::{Path, PathBuf};
 ///
@@ -48,8 +48,10 @@ use crate::prelude::*;
 ///     }
 ///   };
 ///
-///   std::fs::read_dir(path).and_then(|dir| dir.into_iter().collect::<io::Result<Vec<DirEntry>>>())
-///                          .and_then(|ents| {
+///   std::fs::read_dir(path).bind1(|dir: ReadDir| {
+///                            dir.into_iter().collect::<io::Result<Vec<DirEntry>>>()
+///                          })
+///                          .bind1(|ents: Vec<DirEntry>| {
 ///                            ents.foldl(find_matches, vec![])
 ///                                .sequence::<hkt::ResultOk<_>>()
 ///                          })
