@@ -81,7 +81,10 @@ pub trait Bifunctor<F, A, B>
   }
 
   /// Wrap this type in [`Join`]
-  fn join(self) -> Join<F, Self, A> where Self: Sized, F: HKT2<T<A, A> = Self> {
+  fn join(self) -> Join<F, Self, A>
+    where Self: Sized,
+          F: HKT2<T<A, A> = Self>
+  {
     Join::join(self)
   }
 }
@@ -94,9 +97,9 @@ pub trait Bifunctor<F, A, B>
 /// use naan::prelude::*;
 ///
 /// let r = Result::<(), ()>::Ok(()) // Result<(), ()>
-///   .join()
-///   .fmap(|_| format!("hello!")) // Result<String, String>
-///   .unjoin();
+///                                 .join()
+///                                 .fmap(|_| format!("hello!")) // Result<String, String>
+///                                 .unjoin();
 ///
 /// assert_eq!(r, Ok(format!("hello!")));
 /// ```
