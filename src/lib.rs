@@ -90,7 +90,7 @@
 //! ### Lazy IO
 
 // docs
-#![doc(html_root_url = "https://docs.rs/naan/0.1.10")]
+#![doc(html_root_url = "https://docs.rs/naan/0.1.11")]
 #![cfg_attr(any(docsrs, feature = "docs"), feature(doc_cfg))]
 // -
 // deny
