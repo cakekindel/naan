@@ -14,7 +14,9 @@ pub mod hkt {
 }
 
 impl<A> Functor<hkt::Vec, A> for Vec<A> {
-  fn fmap<B>(self, f: impl F1<A, B>) -> Vec<B> {
+  fn fmap<AB, B>(self, f: AB) -> Vec<B>
+    where AB: F1<A, B>
+  {
     self.into_iter().map(|a| f.call(a)).collect()
   }
 }

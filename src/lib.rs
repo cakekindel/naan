@@ -112,6 +112,9 @@ pub mod alt;
 /// Apply, Applicative
 pub mod apply;
 
+/// Bifunctor
+pub mod bifunctor;
+
 /// Monad
 pub mod monad;
 
@@ -138,7 +141,7 @@ pub(crate) enum Never {}
 /// Re-exports of HKT markers for types that have provided implementations
 pub mod hkt {
   pub use crate::impls::option::hkt::Option;
-  pub use crate::impls::result::hkt::ResultOk;
+  pub use crate::impls::result::hkt::{Result, ResultOk};
   pub use crate::impls::vec::hkt::Vec;
 
   /// `std::io`
@@ -152,6 +155,7 @@ pub mod hkt {
 pub mod prelude {
   pub use crate::alt::*;
   pub use crate::apply::*;
+  pub use crate::bifunctor::*;
   pub use crate::fold::*;
   pub use crate::fun::compose::*;
   pub use crate::fun::curry2::*;
@@ -231,8 +235,15 @@ pub trait HKT2 {
 macro_rules! deriving {
   (impl$(<$($vars:ident),+>)? Functor<$hkt:ty, $a:ident> for $t:ty {..FunctorOnce}) => {
     impl<$a, $($($vars),+)?> Functor<$hkt, $a> for $t {
-      fn fmap<B>(self, f: impl F1<A, B>) -> <$hkt as HKT1>::T<B> {
+      fn fmap<AB, B>(self, f: AB) -> <$hkt as HKT1>::T<B> where AB: F1<A, B> {
         self.fmap1(f)
+      }
+    }
+  };
+  (impl$(<$($vars:ident),+>)? Bifunctor<$hkt:ty, $a:ident, $b:ident> for $t:ty {..BifunctorOnce}) => {
+    impl<$a, $b, $($($vars),+)?> Bifunctor<$hkt, $a, $b> for $t {
+      fn bimap<AB, BB, FA, FB>(self, fa: FA, fb: FB) -> <$hkt as HKT2>::T<AB, BB> where FA: F1<$a, AB>, FB: F1<$b, BB> {
+        self.bimap1(fa, fb)
       }
     }
   };

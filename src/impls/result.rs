@@ -110,3 +110,16 @@ impl<A, E> MonadOnce<hkt::ResultOk<E>, A> for Result<A, E> {
   }
 }
 deriving!(impl<E> Monad<hkt::ResultOk<E>, A> for Result<A, E> {..MonadOnce});
+
+impl<A, E> BifunctorOnce<hkt::Result, A, E> for Result<A, E> {
+  fn bimap1<AB, BB, FA, FB>(self, fa: FA, fb: FB) -> <hkt::Result as HKT2>::T<AB, BB>
+    where FA: F1Once<A, AB>,
+          FB: F1Once<E, BB>
+  {
+    match self {
+      | Ok(a) => Ok(fa.call1(a)),
+      | Err(e) => Err(fb.call1(e)),
+    }
+  }
+}
+deriving!(impl Bifunctor<hkt::Result, A, E> for Result<A, E> {..BifunctorOnce});

@@ -28,7 +28,9 @@ pub trait FunctorOnce<F, A>
 /// }
 ///
 /// impl<A> Functor<ContainerHKT, A> for Container<A> {
-///   fn fmap<B>(self, f: impl F1<A, B>) -> Container<B> {
+///   fn fmap<AB, B>(self, f: AB) -> Container<B>
+///     where AB: F1<A, B>
+///   {
 ///     Container(f.call(self.0))
 ///   }
 /// }
@@ -40,5 +42,6 @@ pub trait Functor<F, A>
   where F: HKT1<T<A> = Self>
 {
   /// See [`Functor`]
-  fn fmap<B>(self, f: impl F1<A, B>) -> F::T<B>;
+  fn fmap<AB, B>(self, f: AB) -> F::T<B>
+    where for<'a> AB: F1<A, B>;
 }
