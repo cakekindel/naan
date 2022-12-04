@@ -16,7 +16,70 @@
 //! * lazy IO
 //!
 //! All of this is made possible with a trick using [Generic associated types](https://blog.rust-lang.org/2022/11/03/Rust-1.65.0.html#generic-associated-types-gats)
-//! to emulate [**_Kind_**s](https://en.wikipedia.org/wiki/Kind_(type_theory))
+//! to emulate [**_Kinds_**](https://en.wikipedia.org/wiki/Kind_(type_theory))
+//!
+//! ### HKTs
+//! #### What it is
+//! In type theory, it can be useful to have language to differentiate between a concrete type (`u8`, `Vec<u8>`, `Result<File, io::Error>`)
+//! and a generic type without its parameters supplied. (`Vec`, `Option`, `Result`)
+//!
+//! For example, `Vec` is a 1-argument (_unary_) type function, and `Vec<u8>` is a concrete type.
+//!
+//! Kind refers to how many (if any) parameters a type has.
+//!
+//! #### Why it's useful
+//! In vanilla Rust, `Result::map` and `Option::map` have very similar shapes:
+//! ```text
+//! impl<A, E> Result<A, E> {
+//!   fn map<B>(self, f: impl FnMut(A) -> B) -> Result<B, E>;
+//! }
+//!
+//! impl<A> Option<A> {
+//!   fn map<B>(self, f: impl FnMut(A) -> B) -> Option<B>;
+//! }
+//! ```
+//! it would be useful (for reasons we'll expand on later) to have them
+//! both implement a `Map` trait:
+//! ```text
+//! trait Map<A> {
+//!   fn map<B>(self: Self<A>, f: impl FnMut(A) -> B) -> Self<B>;
+//! }
+//! ```
+//! but this code snippet isn't legal Rust because `Self` needs to be generic (kind `* -> *`)
+//! and in vanilla Rust `Self` must be a concrete type.
+//!
+//! #### How it's done
+//! With the introduction of [Generic associated types](https://blog.rust-lang.org/2022/11/03/Rust-1.65.0.html#generic-associated-types-gats),
+//! we can write a "type function of kind `* -> *`" trait (here called `HKT`).
+//!
+//! Using this we can implement `HKT` for `Option`, `Result`, or any `Self` _essentially_ generic by tying it to
+//! and write the `Map` trait from above in legal Rust:
+//!
+//! ```rust
+//! trait HKT {
+//!   type Of<A>;
+//! }
+//!
+//! struct OptionHKT;
+//! impl HKT for OptionHKT {
+//!   type Of<A> = Option<A>;
+//! }
+//!
+//! trait Map<M, A>
+//!   where M: HKT<Of<A> = Self>
+//! {
+//!   fn map<B, F>(self, f: F) -> M::Of<B>
+//!     where F: FnMut(A) -> B;
+//! }
+//!
+//! impl<A> Map<OptionHKT, A> for Option<A> {
+//!   fn map<B, F>(self, f: F) -> Option<B>
+//!     where F: FnMut(A) -> B
+//!   {
+//!     self.map(f)
+//!   }
+//! }
+//! ```
 //!
 //! ### Currying
 //!
@@ -25,8 +88,6 @@
 //! ### Typeclasses
 //!
 //! ### Lazy IO
-//!
-//! ### HKTs
 
 // docs
 #![doc(html_root_url = "https://docs.rs/naan/0.1.10")]
