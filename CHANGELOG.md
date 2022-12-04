@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.12 (2022-12-04)
+
+
+### Features
+
+* bifunctor ([fd2798b](https://github.com/cakekindel/naan/commit/fd2798b59fa4f15ce9fd0da49e02dec52a323466))
+
 ### 0.1.11 (2022-12-04)
 
 ### 0.1.10 (2022-12-03)
