@@ -27,7 +27,7 @@
 //!
 //! #### Why it's useful
 //! In vanilla Rust, `Result::map` and `Option::map` have very similar shapes:
-//! ```text
+//! ```rust,ignore
 //! impl<A, E> Result<A, E> {
 //!   fn map<B>(self, f: impl FnMut(A) -> B) -> Result<B, E>;
 //! }
@@ -38,7 +38,7 @@
 //! ```
 //! it would be useful (for reasons we'll expand on later) to have them
 //! both implement a `Map` trait:
-//! ```text
+//! ```rust,ignore
 //! trait Map<A> {
 //!   fn map<B>(self: Self<A>, f: impl FnMut(A) -> B) -> Self<B>;
 //! }
@@ -85,12 +85,12 @@
 //! accept more than one argument into functions that return functions.
 //!
 //! Concrete example:
-//! ```text
+//! ```rust,ignore
 //! fn foo(String, usize) -> usize;
 //! foo(format!("bar"), 12);
 //! ```
 //! would be curried into:
-//! ```text
+//! ```rust,ignore
 //! fn foo(String) -> impl Fn(usize) -> usize;
 //! foo(format!("bar"))(12);
 //! ```
