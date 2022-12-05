@@ -1,15 +1,13 @@
-//! # naan
 //! ## deliciously succinct
 //! [naan](https://en.wikipedia.org/wiki/Naan) is a functional programming prelude
-//! for the Rust language using newly available techniques to make FP:
+//! for the Rust language that is:
 //! * easy
 //! * useful
 //! * `std`- and `alloc`-optional
-//! * `dyn`less
-//!
-//! All on stable Rust.
+//! * _FAST_ - exclusively uses concrete types (no `dyn`amic dispatch) meaning near-zero perf cost
 //!
 //! ## new problem-solving tools
+//! * higher-kinded types
 //! * currying
 //! * function composition
 //! * new, general typeclasses
@@ -82,6 +80,88 @@
 //! ```
 //!
 //! ### Currying
+//! #### What it is
+//! *Currying* is the technique where `naan` gets its name. Function currying is the strategy of splitting functions that
+//! accept more than one argument into functions that return functions.
+//!
+//! Concrete example:
+//! ```text
+//! fn foo(String, usize) -> usize;
+//! foo(format!("bar"), 12);
+//! ```
+//! would be curried into:
+//! ```text
+//! fn foo(String) -> impl Fn(usize) -> usize;
+//! foo(format!("bar"))(12);
+//! ```
+//!
+//! #### Why it's useful
+//! Currying allows us to provide _some_ of a function's arguments and provide the rest of this
+//! partially applied function's arguments at a later date.
+//!
+//! This allows us to use functions to store state, and lift functions that accept any number
+//! of parameters to accept Results using [`Apply`](https://docs.rs/naan/latest/naan/apply/trait.Apply.html#example)
+//!
+//! **EXAMPLE: reusable function with a stored parameter**
+//! ```rust,no_run
+//! use std::fs::File;
+//!
+//! use naan::prelude::*;
+//!
+//! fn copy_file_to_dir(dir: String, file: File) -> std::io::Result<()> {
+//!   // ...
+//!   # Ok(())
+//! }
+//!
+//! fn main() {
+//!   let dir = std::env::var("DEST_DIR").unwrap();
+//!   let copy = copy_file_to_dir.curry().call(dir);
+//!
+//!   File::open("a.txt").bind1(copy.clone())
+//!                      .bind1(|_| File::open("b.txt"))
+//!                      .bind1(copy.clone())
+//!                      .bind1(|_| File::open("c.txt"))
+//!                      .bind1(copy);
+//! }
+//!
+//! /*
+//!   equivalent to:
+//!   fn main() {
+//!     let dir = std::env::var("DEST_DIR").unwrap();
+//!
+//!     copy_file_to_dir(dir.clone(), File::open("a.txt")?)?;
+//!     copy_file_to_dir(dir.clone(), File::open("b.txt")?)?;
+//!     copy_file_to_dir(dir, File::open("c.txt")?)?;
+//!   }
+//! */
+//! ```
+//!
+//! **EXAMPLE: lifting a function to accept Results (or Options)**
+//! ```rust,no_run
+//! use std::fs::File;
+//!
+//! use naan::prelude::*;
+//!
+//! fn append_contents(from: File, to: File) -> std::io::Result<()> {
+//!   // ...
+//!   # Ok(())
+//! }
+//!
+//! fn main() -> std::io::Result<()> {
+//!   Ok(append_contents.curry()).apply1(File::open("from.txt"))
+//!                              .apply1(File::open("to.txt"))
+//!                              .flatten()
+//! }
+//!
+//! /*
+//! equivalent to:
+//! fn main() -> std::io::Result<()> {
+//!   let from = File::open("from.txt")?;
+//!   let to = File::open("to.txt")?;
+//!   append_contents(from, to)
+//! }
+//! */
+//! ```
 //!
 //! ### Function Composition
 //!
