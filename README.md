@@ -33,7 +33,7 @@ Kind refers to how many (if any) parameters a type has.
 
 ##### Why it's useful
 In vanilla Rust, `Result::map` and `Option::map` have very similar shapes:
-```
+```rust
 impl<A, E> Result<A, E> {
   fn map<B>(self, f: impl FnMut(A) -> B) -> Result<B, E>;
 }
@@ -44,7 +44,7 @@ impl<A> Option<A> {
 ```
 it would be useful (for reasons we'll expand on later) to have them
 both implement a `Map` trait:
-```
+```rust
 trait Map<A> {
   fn map<B>(self: Self<A>, f: impl FnMut(A) -> B) -> Self<B>;
 }
@@ -91,12 +91,12 @@ impl<A> Map<OptionHKT, A> for Option<A> {
 accept more than one argument into functions that return functions.
 
 Concrete example:
-```
+```rust
 fn foo(String, usize) -> usize;
 foo(format!("bar"), 12);
 ```
 would be curried into:
-```
+```rust
 fn foo(String) -> impl Fn(usize) -> usize;
 foo(format!("bar"))(12);
 ```
@@ -169,7 +169,74 @@ fn main() -> std::io::Result<()> {
 */
 ```
 
+##### How it's done
+naan introduces a few new function traits that add
+ergonomics around currying and function composition;
+`F1`, `F2` and `F3`. These traits extend the builtin function
+traits `Fn` and `FnOnce` with methods that allow currying and function
+composition.
+
+(note that each arity has a "callable multiple times"
+version and a "callable at least once" version. The latter traits are
+denoted with a suffix of `Once`)
+```rust
+pub trait F2Once<A, B, C>: Sized {
+  /// The concrete type that `curry` returns.
+  type Curried;
+
+  /// Call the function
+  fn call1(self, a: A, b: B) -> C;
+
+  /// Curry this function, transforming it from
+  ///
+  /// `fn(A, B) -> C`
+  /// to
+  /// `fn(A) -> fn(B) -> C`
+  fn curry(self) -> Self::Curried;
+}
+
+pub trait F2<A, B, C>: F2Once<A, B, C> {
+  /// Call the function with all arguments
+  fn call(&self, a: A, b: B) -> C;
+}
+
+impl<F, A, B, C> F2<A, B, C> for F where F: Fn(A, B) -> C { /* <snip> */ }
+impl<F, A, B, C> F2Once<A, B, C> for F where F: FnOnce(A, B) -> C { /* <snip> */ }
+```
+
 #### Function Composition
+##### What it is
+Function composition is the strategy of chaining functions sequentially by
+automatically passing the output of one function to the input of another.
+
+This very powerful technique lets us concisely express programs in terms of
+data that flows through pipes, rather than a sequence of time-bound statements:
+
+```rust
+use naan::prelude::*;
+
+struct Apple;
+struct Orange;
+struct Grape;
+#[derive(Debug, PartialEq)]
+struct Banana;
+
+fn apple_to_orange(a: Apple) -> Orange {
+  Orange
+}
+fn orange_to_grape(o: Orange) -> Grape {
+  Grape
+}
+fn grape_to_banana(g: Grape) -> Banana {
+  Banana
+}
+
+fn main() {
+  let apple_to_banana = apple_to_orange.chain(orange_to_grape)
+                                       .chain(grape_to_banana);
+  assert_eq!(apple_to_banana.call(Apple), Banana)
+}
+```
 
 #### Typeclasses
 
