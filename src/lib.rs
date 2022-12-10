@@ -288,8 +288,8 @@
 //! // Declarative
 //! fn foo0() -> io::Result<()> {
 //!   network_fetch_name().and_then(|name| {
-//!                         global_state_store_name(&name);
-//!                         name
+//!                         global_state_store_name(&name)?;
+//!                         Ok(name)
 //!                       })
 //!                       .map(|name| format!("hello, {name}!"))
 //!                       .and_then(network_send_message)
@@ -299,7 +299,7 @@
 //! fn foo1() -> io::Result<()> {
 //!   let name = network_fetch_name()?;
 //!   global_state_store_name(&name)?;
-//!   network_send_message(format!("hello, {name}!"));
+//!   network_send_message(format!("hello, {name}!"))
 //! }
 //!
 //! // Imperative
@@ -311,6 +311,7 @@
 //!
 //!   match global_state_store_name(&name) {
 //!     | Err(e) => return Err(e),
+//!     | _ => (),
 //!   };
 //!
 //!   network_send_message(format!("hello, {name}!"))
@@ -471,7 +472,7 @@
 //!  * `Option<T>` (`Option::empty() == None`)
 //!
 //! These are defined as:
-//! ```rust,no_run
+//! ```rust,ignore
 //! // 🔎 `Self` must be generic over some type `A`.
 //! pub trait Alt<F, A>
 //!   where Self: Functor<F, A>,
