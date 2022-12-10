@@ -31,8 +31,12 @@ for the Rust language that is:
 * lazy IO
 
 ### Higher-Kinded Types
+[Top](#table-of-contents) &middot; [Next - Currying](#currying)
+
 #### HKT - What it is
-In type theory, it can be useful to have language to differentiate between a concrete type (`u8`, `Vec<u8>`, `Result<File, io::Error>`)
+[Top](#table-of-contents) &middot; [Up - HKTs](#higher-kinded-types)
+
+When talking about types, it can be useful to be able to differentiate between a concrete type (`u8`, `Vec<u8>`, `Result<File, io::Error>`)
 and a generic type without its parameters supplied. (`Vec`, `Option`, `Result`)
 
 For example, `Vec` is a 1-argument (_unary_) type function, and `Vec<u8>` is a concrete type.
@@ -40,6 +44,7 @@ For example, `Vec` is a 1-argument (_unary_) type function, and `Vec<u8>` is a c
 Kind refers to how many (if any) parameters a type has.
 
 #### HKT - Why it's useful
+[Top](#table-of-contents) &middot; [Up - HKTs](#higher-kinded-types)
 In vanilla Rust, `Result::map` and `Option::map` have very similar shapes:
 ```rust
 impl<A, E> Result<A, E> {
@@ -66,6 +71,8 @@ impl<A> Map<A> for Option<A> {
 but this code snippet isn't legal Rust because `Self` needs to be generic and in vanilla Rust `Self` must be a concrete type.
 
 #### HKT - How it's done
+[Top](#table-of-contents) &middot; [Up - HKTs](#higher-kinded-types)
+
 With the introduction of [Generic associated types](https://blog.rust-lang.org/2022/11/03/Rust-1.65.0.html#generic-associated-types-gats),
 we can write a trait that can effectively replace a "generic self" feature.
 
@@ -97,7 +104,10 @@ impl<A> Map<OptionHKT, A> for Option<A> {
 ```
 
 ### Currying
+[Top](#table-of-contents) &middot; [Prev - HKT](#higher-kinded-types) &middot; [Next - Function Composition](#function-composition)
 #### Currying - What it is
+[Top](#table-of-contents) &middot; [Up - Currying](#currying)
+
 *Currying* is the technique where `naan` gets its name. Function currying is the strategy of splitting functions that
 accept more than one argument into multiple functions.
 
@@ -113,6 +123,8 @@ foo(format!("bar"))(12);
 ```
 
 #### Currying - Why it's useful
+[Top](#table-of-contents) &middot; [Up - Currying](#currying)
+
 Currying allows us to provide _some_ of a function's arguments and provide the rest of this
 partially applied function's arguments at a later date.
 
@@ -191,7 +203,9 @@ fn main() -> std::io::Result<()> {
 ```
 </details>
 
-##### Currying - How it's done
+#### Currying - How it's done
+[Top](#table-of-contents) &middot; [Up - Currying](#currying)
+
 naan introduces a few new function traits that add
 ergonomics around currying and function composition;
 `F1`, `F2` and `F3`. These traits extend the builtin function
@@ -233,8 +247,11 @@ impl<F, A, B, C> F2Once<A, B, C> for F where F: FnOnce(A, B) -> C { /* <snip> */
 ```
 </details>
 
-#### Function Composition
-##### Composition - What it is
+### Function Composition
+[Top](#table-of-contents) &middot; [Prev - Currying](#currying) &middot; [Next - Typeclasses](#typeclasses)
+#### Composition - What it is
+[Top](#table-of-contents) &middot; [Up - Function Composition](#function-composition)
+
 Function composition is the strategy of chaining functions sequentially by
 automatically passing the output of one function to the input of another.
 
@@ -267,7 +284,9 @@ fn main() {
 }
 ```
 
-#### Typeclasses
+### Typeclasses
+[Top](#table-of-contents) &middot; [Prev - Function Composition](#function-composition)
+
 Some of the most powerful & practical types in programming are locked behind
 a feature that many languages choose not to implement in Higher-Kinded Types.
 
@@ -337,74 +356,10 @@ We don't need to know much about their internals to know how to use them effecti
 This extremely simple but powerful metaphor allows us to solve some very complex problems with data structures that have
 a shared set of interfaces.
 
-#### Functor
-##### using a function to transform values within a container
-`Functor` is the name we give to types that allow us to take a function from `A -> B`
-and effectively "penetrate" a type and apply it to some `F<A>`, yielding `F<B>` (`a.fmap(a_to_b)`).
-
-_🔎 This is identical to `Result::map` and `Option::map`._
-
-_🔎 There is a separate trait `FunctorOnce` which extends `Functor` to know that the mapping function will only be called once._
-
-`Functor` is defined as:
-```rust
-// 🔎 `Self` must be generic over some type `A`
-pub trait Functor<F, A> where F: HKT1<T<A> = Self>
-{
-  // 🔎 given a function `A -> B`,
-  // apply it to the values of type `A` in `Self<A>` (if any),
-  // yielding `Self<B>`
-  fn fmap<AB, B>(self, f: AB) -> F::T<B> where AB: F1<A, B>;
-}
-```
-
-#### Bifunctor
-##### mapping types with 2 generic parameters
-`Bifunctor` is the name we give to types that have 2 generic parameters,
-both of which can be `map`ped.
-
-`Bifunctor` requires:
-* `bimap`
-  * transforms `T<A, B>` to `T<C, D>`, given a function `A -> C` and another `B -> D`.
-
-`Bifunctor` provides 2 methods:
-* `lmap` (map left type)
-  * `T<A, B> -> T<C, B>`
-* `rmap` (map right type)
-  * `T<A, B> -> T<A, D>`
-
-_🔎 There is a separate trait `BifunctorOnce` which extends `Bifunctor` to know that the mapping functions will only be called once._
-
-`Bifunctor` is defined as:
-```rust
-pub trait Bifunctor<F, A, B>
-  where F: HKT2<T<A, B> = Self>
-{
-  /// 🔎 In Result, this combines `map` and `map_err` into one step.
-  fn bimap<A2, B2, FA, FB>(self, fa: FA, fb: FB) -> F::T<A2, B2>
-    where FA: F1<A, A2>,
-          FB: F1<B, B2>;
-
-  /// 🔎 In Result, this maps the "Ok" type and is equivalent to `map`.
-  fn lmap<A2, FA>(self, fa: FA) -> F::T<A2, B>
-    where Self: Sized,
-          FA: F1<A, A2>
-  {
-    self.bimap(fa, |b| b)
-  }
-
-  /// 🔎 In Result, this maps the "Error" type and is equivalent to `map_err`.
-  fn rmap<B2, FB>(self, fb: FB) -> F::T<A, B2>
-    where Self: Sized,
-          FB: F1<B, B2>
-  {
-    self.bimap(|a| a, fb)
-  }
-}
-```
-
 #### Semigroup and Monoid
 ##### Combining two values of a concrete type
+[Top](#table-of-contents) &middot; [Up - Typeclasses](#typeclasses)
+
 `Semigroup` is the name we give types that support some associative combination
 of two values (`a.append(b)`).
 
@@ -455,6 +410,8 @@ pub trait Monoid: Semigroup {
 
 #### Alt and Plus
 ##### Combining two values of a generic type
+[Top](#table-of-contents) &middot; [Up - Typeclasses](#typeclasses)
+
 `Alt` is the name we give to generic types that support an associative operation
 on 2 values of the same type (`a.alt(b)`).
 
@@ -496,8 +453,80 @@ pub trait Plus<F, A>
 }
 ```
 
-## Foldable
-### Unwrapping & transforming entire data structures
+#### Functor
+##### using a function to transform values within a container
+[Top](#table-of-contents) &middot; [Up - Typeclasses](#typeclasses)
+
+`Functor` is the name we give to types that allow us to take a function from `A -> B`
+and effectively "penetrate" a type and apply it to some `F<A>`, yielding `F<B>` (`a.fmap(a_to_b)`).
+
+_🔎 This is identical to `Result::map` and `Option::map`._
+
+_🔎 There is a separate trait `FunctorOnce` which extends `Functor` to know that the mapping function will only be called once._
+
+`Functor` is defined as:
+```rust
+// 🔎 `Self` must be generic over some type `A`
+pub trait Functor<F, A> where F: HKT1<T<A> = Self>
+{
+  // 🔎 given a function `A -> B`,
+  // apply it to the values of type `A` in `Self<A>` (if any),
+  // yielding `Self<B>`
+  fn fmap<AB, B>(self, f: AB) -> F::T<B> where AB: F1<A, B>;
+}
+```
+
+#### Bifunctor
+##### mapping types with 2 generic parameters
+[Top](#table-of-contents) &middot; [Up - Typeclasses](#typeclasses)
+
+`Bifunctor` is the name we give to types that have 2 generic parameters,
+both of which can be `map`ped.
+
+`Bifunctor` requires:
+* `bimap`
+  * transforms `T<A, B>` to `T<C, D>`, given a function `A -> C` and another `B -> D`.
+
+`Bifunctor` provides 2 methods:
+* `lmap` (map left type)
+  * `T<A, B> -> T<C, B>`
+* `rmap` (map right type)
+  * `T<A, B> -> T<A, D>`
+
+_🔎 There is a separate trait `BifunctorOnce` which extends `Bifunctor` to know that the mapping functions will only be called once._
+
+`Bifunctor` is defined as:
+```rust
+pub trait Bifunctor<F, A, B>
+  where F: HKT2<T<A, B> = Self>
+{
+  /// 🔎 In Result, this combines `map` and `map_err` into one step.
+  fn bimap<A2, B2, FA, FB>(self, fa: FA, fb: FB) -> F::T<A2, B2>
+    where FA: F1<A, A2>,
+          FB: F1<B, B2>;
+
+  /// 🔎 In Result, this maps the "Ok" type and is equivalent to `map`.
+  fn lmap<A2, FA>(self, fa: FA) -> F::T<A2, B>
+    where Self: Sized,
+          FA: F1<A, A2>
+  {
+    self.bimap(fa, |b| b)
+  }
+
+  /// 🔎 In Result, this maps the "Error" type and is equivalent to `map_err`.
+  fn rmap<B2, FB>(self, fb: FB) -> F::T<A, B2>
+    where Self: Sized,
+          FB: F1<B, B2>
+  {
+    self.bimap(|a| a, fb)
+  }
+}
+```
+
+### Foldable
+#### Unwrapping & transforming entire data structures
+[Top](#table-of-contents) &middot; [Up - Typeclasses](#typeclasses)
+
 Types that are `Foldable` can be unwrapped and collected into a new value.
 Fold is a powerful and complex operation because of how general it is; if something
 is foldable, it can be folded into practically anything.
@@ -506,7 +535,7 @@ _🔎 There is a separate trait `FoldableOnce` which extends `Foldable` to know 
 
 Folding can be thought of as a series of steps:
 1. Given some foldable `F<T>`, and you want a `R`
-   * _I have a Vec<Option<u32>> and I want to sum the u32s that are Some, and discard the Nones_
+   * _I have a `Vec<Option<u32>>` and I want to sum the u32s that are Some, and discard the Nones_
 1. Start with some initial value of type `R`
    * _I want a sum of u32s, so I'll start with zero._
 1. Write a function of type `Fn(R, T) -> R`. This will be called with the initial `R` along with a value of type `T` from within `F<T>`. The function will be called repeatedly with the `R` returned by the last call until there are no more `T`s in `F<T>`.
