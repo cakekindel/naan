@@ -185,7 +185,7 @@
 //! ```
 //! </details>
 //!
-//! #### Currying - How it's done
+//! ### Currying - How it's done
 //! naan introduces a few new function traits that add
 //! ergonomics around currying and function composition;
 //! `F1`, `F2` and `F3`. These traits extend the builtin function
@@ -227,8 +227,8 @@
 //! ```
 //! </details>
 //!
-//! ### Function Composition
-//! #### Composition - What it is
+//! ## Function Composition
+//! ### Composition - What it is
 //! Function composition is the strategy of chaining functions sequentially by
 //! automatically passing the output of one function to the input of another.
 //!
@@ -261,7 +261,7 @@
 //! }
 //! ```
 //!
-//! ### Typeclasses
+//! ## Typeclasses
 //! Some of the most powerful & practical types in programming are locked behind
 //! a feature that many languages choose not to implement in Higher-Kinded Types.
 //!
@@ -490,8 +490,8 @@
 //! }
 //! ```
 //!
-//! # Foldable
-//! ## Unwrapping & transforming entire data structures
+//! ## Foldable
+//! ### Unwrapping & transforming entire data structures
 //! Types that are `Foldable` can be unwrapped and collected into a new value.
 //! Fold is a powerful and complex operation because of how general it is; if something
 //! is foldable, it can be folded into practically anything.
@@ -500,7 +500,7 @@
 //!
 //! Folding can be thought of as a series of steps:
 //! 1. Given some foldable `F<T>`, and you want a `R`
-//!    * _I have a Vec<Option<u32>> and I want to sum the u32s that are Some, and discard the Nones_
+//!    * _I have a `Vec<Option<u32>>` and I want to sum the u32s that are Some, and discard the Nones_
 //! 1. Start with some initial value of type `R`
 //!    * _I want a sum of u32s, so I'll start with zero._
 //! 1. Write a function of type `Fn(R, T) -> R`. This will be called with the initial `R` along with a value of type `T` from within `F<T>`. The function will be called repeatedly with the `R` returned by the last call until there are no more `T`s in `F<T>`.
