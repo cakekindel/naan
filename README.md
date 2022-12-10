@@ -12,18 +12,25 @@ for the Rust language that is:
 * `std`- and `alloc`-optional
 * _FAST_ - exclusively uses concrete types (no `dyn`amic dispatch) meaning near-zero perf cost
 
-### new problem-solving tools
-* higher-kinded types
-* currying
-* function composition
-* new, general typeclasses
+### Table of Contents
+* [higher-kinded types](#higher-kinded-types)
+  * [what?](#hkt---what-it-is)
+  * [why?](#hkt---why-its-useful)
+  * [how?](#hkt---how-its-done)
+* [currying](#currying)
+  * [what?](#currying---what-it-is)
+  * [why?](#currying---why-its-useful)
+  * [how?](#currying---how-its-done)
+* [function composition](#function-composition)
+* [typeclasses](#typeclasses)
+  * [`append`, `identity`](#semigroup-and-monoid)
+  * [`alt`, `empty`](#alt-and-plus)
+  * [`fmap`, `map`](#functor)
+  * [`bimap`, `lmap`, `rmap`](#bifunctor)
 * lazy IO
 
-All of this is made possible with a trick using [Generic associated types](https://blog.rust-lang.org/2022/11/03/Rust-1.65.0.html#generic-associated-types-gats)
-to emulate [**_Kinds_**](https://en.wikipedia.org/wiki/Kind_(type_theory))
-
-#### HKTs
-##### What it is
+### Higher-Kinded Types
+#### HKT - What it is
 In type theory, it can be useful to have language to differentiate between a concrete type (`u8`, `Vec<u8>`, `Result<File, io::Error>`)
 and a generic type without its parameters supplied. (`Vec`, `Option`, `Result`)
 
@@ -31,7 +38,7 @@ For example, `Vec` is a 1-argument (_unary_) type function, and `Vec<u8>` is a c
 
 Kind refers to how many (if any) parameters a type has.
 
-##### Why it's useful
+#### HKT - Why it's useful
 In vanilla Rust, `Result::map` and `Option::map` have very similar shapes:
 ```rust
 impl<A, E> Result<A, E> {
@@ -48,17 +55,20 @@ both implement a `Map` trait:
 trait Map<A> {
   fn map<B>(self: Self<A>, f: impl FnMut(A) -> B) -> Self<B>;
 }
+
+impl<A> Map<A> for Option<A> {
+ fn map<B>(self, f: impl FnMut(A) -> B) -> Option<B> {
+   Option::map(self, f)
+ }
+}
 ```
-but this code snippet isn't legal Rust because `Self` needs to be generic (kind `* -> *`)
-and in vanilla Rust `Self` must be a concrete type.
+but this code snippet isn't legal Rust because `Self` needs to be generic and in vanilla Rust `Self` must be a concrete type.
 
-##### How it's done
+#### HKT - How it's done
 With the introduction of [Generic associated types](https://blog.rust-lang.org/2022/11/03/Rust-1.65.0.html#generic-associated-types-gats),
-we can write a "type function of kind `* -> *`" trait (here called `HKT`).
+we can write a trait that can effectively replace a "generic self" feature.
 
-Using this we can implement `HKT` for `Option`, `Result`, or any `Self` _essentially_ generic by tying it to
-and write the `Map` trait from above in legal Rust:
-
+Now we can actually write the trait above in legal, stable rust:
 ```rust
 trait HKT {
   type Of<A>;
@@ -80,17 +90,17 @@ impl<A> Map<OptionHKT, A> for Option<A> {
   fn map<B, F>(self, f: F) -> Option<B>
     where F: FnMut(A) -> B
   {
-    self.map(f)
+    Option::map(self, f)
   }
 }
 ```
 
-#### Currying
-##### What it is
+### Currying
+#### Currying - What it is
 *Currying* is the technique where `naan` gets its name. Function currying is the strategy of splitting functions that
-accept more than one argument into functions that return functions.
+accept more than one argument into multiple functions.
 
-Concrete example:
+Example:
 ```rust
 fn foo(String, usize) -> usize;
 foo(format!("bar"), 12);
@@ -101,14 +111,19 @@ fn foo(String) -> impl Fn(usize) -> usize;
 foo(format!("bar"))(12);
 ```
 
-##### Why it's useful
+#### Currying - Why it's useful
 Currying allows us to provide _some_ of a function's arguments and provide the rest of this
 partially applied function's arguments at a later date.
 
 This allows us to use functions to store state, and lift functions that accept any number
 of parameters to accept Results using [`Apply`](https://docs.rs/naan/latest/naan/apply/trait.Apply.html#example)
 
+<details>
+<summary>
+
 **EXAMPLE: reusable function with a stored parameter**
+</summary>
+
 ```rust
 use std::fs::File;
 
@@ -141,8 +156,13 @@ fn main() {
   }
 */
 ```
+</details>
+<details>
+<summary>
 
 **EXAMPLE: lifting a function to accept Results (or Options)**
+</summary>
+
 ```rust
 use std::fs::File;
 
@@ -168,8 +188,9 @@ fn main() -> std::io::Result<()> {
 }
 */
 ```
+</details>
 
-##### How it's done
+##### Currying - How it's done
 naan introduces a few new function traits that add
 ergonomics around currying and function composition;
 `F1`, `F2` and `F3`. These traits extend the builtin function
@@ -179,6 +200,12 @@ composition.
 (note that each arity has a "callable multiple times"
 version and a "callable at least once" version. The latter traits are
 denoted with a suffix of `Once`)
+<details>
+<summary>
+
+**`F2` and `F2Once` Definitions**
+</summary>
+
 ```rust
 pub trait F2Once<A, B, C>: Sized {
   /// The concrete type that `curry` returns.
@@ -203,9 +230,10 @@ pub trait F2<A, B, C>: F2Once<A, B, C> {
 impl<F, A, B, C> F2<A, B, C> for F where F: Fn(A, B) -> C { /* <snip> */ }
 impl<F, A, B, C> F2Once<A, B, C> for F where F: FnOnce(A, B) -> C { /* <snip> */ }
 ```
+</details>
 
 #### Function Composition
-##### What it is
+##### Composition - What it is
 Function composition is the strategy of chaining functions sequentially by
 automatically passing the output of one function to the input of another.
 
@@ -239,8 +267,235 @@ fn main() {
 ```
 
 #### Typeclasses
+Some of the most powerful & practical types in programming are locked behind
+a feature that many languages choose not to implement in Higher-Kinded Types.
 
-#### Lazy IO
+Utilities like `map`, `unwrap_or`, and `and_then` are enormously useful tools
+in day-to-day rust that allow us to conveniently skip a lot of hand-written control flow.
+<details>
+<summary>
+
+**Comparing `and_then` and `map` to their desugared equivalent**
+</summary>
+
+```rust
+use std::io;
+
+fn network_fetch_name() -> io::Result<String> {
+  Ok("harry".into())
+}
+fn network_send_message(msg: String) -> io::Result<()> {
+  Ok(())
+}
+fn global_state_store_name(name: &str) -> io::Result<()> {
+  Ok(())
+}
+
+// Declarative
+fn foo0() -> io::Result<()> {
+  network_fetch_name().and_then(|name| {
+                        global_state_store_name(&name)?;
+                        Ok(name)
+                      })
+                      .map(|name| format!("hello, {name}!"))
+                      .and_then(network_send_message)
+}
+
+// Idiomatic
+fn foo1() -> io::Result<()> {
+  let name = network_fetch_name()?;
+  global_state_store_name(&name)?;
+  network_send_message(format!("hello, {name}!"))
+}
+
+// Imperative
+fn foo2() -> io::Result<()> {
+  let name = match network_fetch_name() {
+    | Ok(name) => name,
+    | Err(e) => return Err(e),
+  };
+
+  match global_state_store_name(&name) {
+    | Err(e) => return Err(e),
+    | _ => (),
+  };
+
+  network_send_message(format!("hello, {name}!"))
+}
+```
+
+A couple notes:
+ - the "idiomatic" implementation is the most brief and scannable
+ - the idiomatic and imperative implementations are more difficult to refactor due to scope sharing; imperative statements depend on the previous statements in order to be meaningful, while declarative expressions have little to no coupling to state or scope.
+</details>
+
+The value proposition of these typeclasses is that they allow us to think of types like Result, Option and Iterators as being abstract **containers**.
+
+We don't need to know much about their internals to know how to use them effectively and productively.
+
+This extremely simple but powerful metaphor allows us to solve some very complex problems with data structures that have
+a shared set of interfaces.
+
+#### `Functor`
+##### using a function to transform values within a container
+`Functor` is the name we give to types that allow us to take a function from `A -> B`
+and effectively "penetrate" a type and apply it to some `F<A>`, yielding `F<B>` (`a.fmap(a_to_b)`).
+
+_🔎 This is identical to `Result::map` and `Option::map`._
+
+_🔎 There is a separate trait `FunctorOnce` which extends `Functor` to know that the mapping function will only be called once._
+
+`Functor` is defined as:
+```rust
+// 🔎 `Self` must be generic over some type `A`
+pub trait Functor<F, A> where F: HKT1<T<A> = Self>
+{
+  // 🔎 given a function `A -> B`,
+  // apply it to the values of type `A` in `Self<A>` (if any),
+  // yielding `Self<B>`
+  fn fmap<AB, B>(self, f: AB) -> F::T<B> where AB: F1<A, B>;
+}
+```
+
+#### `Bifunctor`
+##### mapping types with 2 generic parameters
+`Bifunctor` is the name we give to types that have 2 generic parameters,
+both of which can be `map`ped.
+
+`Bifunctor` requires:
+* `bimap`
+  * transforms `T<A, B>` to `T<C, D>`, given a function `A -> C` and another `B -> D`.
+
+`Bifunctor` provides 2 methods:
+* `lmap` (map left type)
+  * `T<A, B> -> T<C, B>`
+* `rmap` (map right type)
+  * `T<A, B> -> T<A, D>`
+
+_🔎 There is a separate trait `BifunctorOnce` which extends `Bifunctor` to know that the mapping functions will only be called once._
+
+`Bifunctor` is defined as:
+```rust
+pub trait Bifunctor<F, A, B>
+  where F: HKT2<T<A, B> = Self>
+{
+  /// 🔎 In Result, this combines `map` and `map_err` into one step.
+  fn bimap<A2, B2, FA, FB>(self, fa: FA, fb: FB) -> F::T<A2, B2>
+    where FA: F1<A, A2>,
+          FB: F1<B, B2>;
+
+  /// 🔎 In Result, this maps the "Ok" type and is equivalent to `map`.
+  fn lmap<A2, FA>(self, fa: FA) -> F::T<A2, B>
+    where Self: Sized,
+          FA: F1<A, A2>
+  {
+    self.bimap(fa, |b| b)
+  }
+
+  /// 🔎 In Result, this maps the "Error" type and is equivalent to `map_err`.
+  fn rmap<B2, FB>(self, fb: FB) -> F::T<A, B2>
+    where Self: Sized,
+          FB: F1<B, B2>
+  {
+    self.bimap(|a| a, fb)
+  }
+}
+```
+
+#### `Semigroup` and `Monoid`
+##### Combining two values of a concrete type
+`Semigroup` is the name we give types that support some associative combination
+of two values (`a.append(b)`).
+
+_🔎 Associative means `a.append( b.append(c) )` must equal `a.append(b).append(c)`._
+
+Examples:
+ * integer addition
+   * `1 * (2 * 3) == (1 * 2) * 3`
+ * integer multiplication
+   * `1 + (2 + 3) == (1 + 2) + 3`
+ * string concatenation
+   * `"a".append("b".append("c")) == "a".append("b").append("c") == "abc"`
+ * `Vec<T>` concatenation
+   * `vec![1].append(vec![2].append(vec![3])) == vec![1, 2, 3]`
+ * `Option<T>` (only when `T` implements `Semigroup`)
+   * `Some("a").append(Some("b")) == Some("ab")`
+ * `Result<T, _>` (only when `T` implements `Semigroup`)
+   * `Ok("a").append(Ok("b")) == Ok("ab")`
+
+`Monoid` extends `Semigroup` with an "identity" or "empty" value, that will do nothing when appended to another.
+
+Examples:
+ * 0 in integer addition
+   * `0 + 1 == 1`
+ * 1 in integer multiplication
+   * `1 * 2 == 2`
+ * empty string
+   * `String::identity() == ""`
+   * `"".append("a") == "a"`
+ * `Vec<T>`
+   * `Vec::<u32>::identity() == vec![]`
+   * `vec![].append(vec![1, 2]) == vec![1, 2]`
+
+These are defined as:
+```rust
+pub trait Semigroup {
+  // 🔎 Note that this can be **any** combination of 2 selves,
+  // not just concatenation.
+  //
+  // The only rule is that implementations have to be associative.
+  fn append(self, b: Self) -> Self;
+}
+
+pub trait Monoid: Semigroup {
+  fn identity() -> Self;
+}
+```
+
+#### `Alt` and `Plus`
+##### Combining two values of a generic type
+`Alt` is the name we give to generic types that support an associative operation
+on 2 values of the same type (`a.alt(b)`).
+
+_🔎 `Alt` is identical to `Semigroup`, but the implementor is generic._
+
+_🔎 `alt` is identical to `Result::or` and `Option::or`._
+
+Examples:
+ * `Vec<T>`
+   * `vec![1].alt(vec![2]) == vec![1, 2]`
+ * `Result<T, _>`
+   * `Ok(1).alt(Err(_)) == Ok(1)`
+ * `Option<T>`
+   * `None.alt(Some(1)) == Some(1)`
+
+`Plus` extends `Alt` with an "identity" or "empty" value, that will do nothing when `alt`ed to another.
+
+_🔎 `Plus` is identical to `Monoid`, but the implementor is generic._
+
+Examples:
+ * `Vec<T>` (`Vec::empty() == vec![]`)
+ * `Option<T>` (`Option::empty() == None`)
+
+These are defined as:
+```rust
+// 🔎 `Self` must be generic over some type `A`.
+pub trait Alt<F, A>
+  where Self: Functor<F, A>,
+        F: HKT1<T<A> = Self>
+{
+  fn alt(self, b: Self) -> Self;
+}
+
+pub trait Plus<F, A>
+  where Self: Alt<F, A>,
+        F: HKT1<T<A> = Self>
+{
+  fn empty() -> F::T<A>;
+}
+```
+
+### Lazy IO
 
 ## License
 
