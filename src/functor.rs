@@ -43,5 +43,5 @@ pub trait Functor<F, A>
 {
   /// See [`Functor`]
   fn fmap<AB, B>(self, f: AB) -> F::T<B>
-    where for<'a> AB: F1<A, B>;
+    where AB: F1<A, B>;
 }
