@@ -21,6 +21,7 @@
 //!   * [`alt`, `empty`](#alt-and-plus)
 //!   * [`fmap`, `map`](#functor)
 //!   * [`bimap`, `lmap`, `rmap`](#bifunctor)
+//!   * [`fold`, `filter`, `find`, `contains`, ...](#foldable)
 //! * lazy IO
 //!
 //! ## Higher-Kinded Types
@@ -330,7 +331,7 @@
 //! This extremely simple but powerful metaphor allows us to solve some very complex problems with data structures that have
 //! a shared set of interfaces.
 //!
-//! ### `Functor`
+//! ### Functor
 //! #### using a function to transform values within a container
 //! `Functor` is the name we give to types that allow us to take a function from `A -> B`
 //! and effectively "penetrate" a type and apply it to some `F<A>`, yielding `F<B>` (`a.fmap(a_to_b)`).
@@ -351,7 +352,7 @@
 //! }
 //! ```
 //!
-//! ### `Bifunctor`
+//! ### Bifunctor
 //! #### mapping types with 2 generic parameters
 //! `Bifunctor` is the name we give to types that have 2 generic parameters,
 //! both of which can be `map`ped.
@@ -396,7 +397,7 @@
 //! }
 //! ```
 //!
-//! ### `Semigroup` and `Monoid`
+//! ### Semigroup and Monoid
 //! #### Combining two values of a concrete type
 //! `Semigroup` is the name we give types that support some associative combination
 //! of two values (`a.append(b)`).
@@ -446,7 +447,7 @@
 //! }
 //! ```
 //!
-//! ### `Alt` and `Plus`
+//! ### Alt and Plus
 //! #### Combining two values of a generic type
 //! `Alt` is the name we give to generic types that support an associative operation
 //! on 2 values of the same type (`a.alt(b)`).
@@ -487,6 +488,110 @@
 //! {
 //!   fn empty() -> F::T<A>;
 //! }
+//! ```
+//!
+//! # Foldable
+//! ## Unwrapping & transforming entire data structures
+//! Types that are `Foldable` can be unwrapped and collected into a new value.
+//! Fold is a powerful and complex operation because of how general it is; if something
+//! is foldable, it can be folded into practically anything.
+//!
+//! _🔎 There is a separate trait `FoldableOnce` which extends `Foldable` to know that the folding function can only be called once._
+//!
+//! Folding can be thought of as a series of steps:
+//! 1. Given some foldable `F<T>`, and you want a `R`
+//!    * _I have a Vec<Option<u32>> and I want to sum the u32s that are Some, and discard the Nones_
+//! 1. Start with some initial value of type `R`
+//!    * _I want a sum of u32s, so I'll start with zero._
+//! 1. Write a function of type `Fn(R, T) -> R`. This will be called with the initial `R` along with a value of type `T` from within `F<T>`. The function will be called repeatedly with the `R` returned by the last call until there are no more `T`s in `F<T>`.
+//!    * `|sum_so_far, option_of_u32| sum_so_far + option_of_u32.unwrap_or(0)`
+//! 1. This function will be called for every `T` contained in `F<T>`, collecting them into the initial value `R` you provided.
+//!    * `vec![Some(1), None, Some(2), Some(4)].fold(|sum, n| sum + n.unwrap_or(0)) == 7`
+//!
+//! <details>
+//! <summary>
+//!
+//! **Examples**</summary>
+//!
+//! ### Result to Option
+//! ```rust
+//! use naan::prelude::*;
+//!
+//! fn passing() -> Result<u32, ()> {
+//!   Ok(0)
+//! }
+//!
+//! fn failing() -> Result<u32, ()> {
+//!   Err(())
+//! }
+//!
+//! assert_eq!(match passing() {
+//!              | Ok(t) => Some(t),
+//!              | _ => None,
+//!            },
+//!            Some(0));
+//!
+//! assert_eq!(passing().fold1(|_, t| Some(t), None), Some(0));
+//! assert_eq!(failing().fold1(|_, t| Some(t), None), None);
+//! ```
+//!
+//! ### Collapse a Vec
+//! ```rust
+//! use naan::prelude::*;
+//!
+//! assert_eq!(vec![1, 2, 3].foldl(|sum, n| sum + n, 0), 6);
+//! assert_eq!(vec![2, 4, 6].foldl(|sum, n| sum * n, 1), 48);
+//! assert_eq!(vec!["a", "b", "c"].foldl(|acc, cur| format!("{acc}{cur}"), String::from("")),
+//!            "abc");
+//! ```
+//! </details>
+//!
+//! `Foldable` is defined as:
+//! ```rust,ignore
+//! pub trait Foldable<F, A> where F: HKT1<T<A> = Self>
+//! {
+//!   /// Fold the data structure from left -> right
+//!   fn foldl<B, BAB>(self, f: BAB, b: B) -> B
+//!     where BAB: F2<B, A, B>;
+//!
+//!   /// Fold the data structure from right -> left
+//!   fn foldr<B, ABB>(self, f: ABB, b: B) -> B
+//!     where ABB: F2<A, B, B>;
+//!
+//!   /// Fold the data structure from left -> right
+//!   fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+//!     where BAB: F2<B, &'a A, B>,
+//!           A: 'a;
+//!
+//!   /// Fold the data structure from right -> left
+//!   fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
+//!     where ABB: F2<&'a A, B, B>,
+//!           A: 'a;
+//!
+//! }
+//! ```
+//!
+//! 🔎 `Foldable` provides many additional methods derived from the required methods above. Full documentation can be found [here](https://docs.rs/naan/latest/naan/fold/trait.Foldable.html).
+//! ```rust
+//! use naan::prelude::*;
+//!
+//! fn is_odd(n: &usize) -> bool {
+//!   n % 2 == 1
+//! }
+//!
+//! fn is_even(n: &usize) -> bool {
+//!   n % 2 == 0
+//! }
+//!
+//! assert_eq!(Some("abc".to_string()).fold(), "abc".to_string());
+//! assert_eq!(Option::<String>::None.fold(), "");
+//!
+//! let abc = vec!["a", "b", "c"].fmap(String::from);
+//!
+//! assert_eq!(abc.clone().fold(), "abc");
+//! assert_eq!(abc.clone().intercalate(", ".into()), "a, b, c".to_string());
+//! assert_eq!(vec![2usize, 4, 8].any(is_odd), false);
+//! assert_eq!(vec![2usize, 4, 8].all(is_even), true);
 //! ```
 //!
 //! ## Lazy IO
