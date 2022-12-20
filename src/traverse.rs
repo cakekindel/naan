@@ -121,7 +121,7 @@ pub trait TraversableOnce<F, A, B, TF>: Traversable<F, A, B, TF> {
   /// }
   ///
   /// let tried_read: std::io::Result<Option<File>> =
-  ///   maybe_path().traverse11::<hkt::io::Result, _>(File::open);
+  ///   maybe_path().traverse11::<hkt::std::io::Result, _>(File::open);
   ///
   /// assert!(matches!(tried_read, Ok(None)))
   /// ```
@@ -287,11 +287,11 @@ pub trait Traversable<F, A, B, TF> {
   /// }
   ///
   /// let paths = vec!["a.txt", "b.txt", "c.txt"];
-  /// let files: std::io::Result<Vec<File>> = paths.traversem1::<hkt::io::Result, _>(File::open);
+  /// let files: std::io::Result<Vec<File>> = paths.traversem1::<hkt::std::io::Result, _>(File::open);
   /// assert!(matches!(files.as_ref().map(|v| v.as_slice()), Ok(&[_, _, _])));
   ///
   /// let paths = vec!["a.txt", "doesnt-exist.txt", "c.txt"];
-  /// let files: std::io::Result<Vec<File>> = paths.traversem1::<hkt::io::Result, _>(File::open);
+  /// let files: std::io::Result<Vec<File>> = paths.traversem1::<hkt::std::io::Result, _>(File::open);
   /// assert!(matches!(files.map_err(|e| e.kind()),
   ///                  Err(std::io::ErrorKind::NotFound)));
   /// ```

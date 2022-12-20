@@ -1,3 +1,6 @@
+/// the Identity monad
+pub mod identity;
+
 /// Option trait impls
 pub mod option;
 

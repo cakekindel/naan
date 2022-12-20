@@ -679,16 +679,21 @@ pub mod hkt {
   pub use crate::impls::option::hkt::Option;
   pub use crate::impls::result::hkt::{Result, ResultOk};
   pub use crate::impls::vec::hkt::Vec;
+  pub use crate::impls::identity::hkt::Id;
 
-  /// `std::io`
+  /// std
+  pub mod std {
+      /// std::io
   pub mod io {
     /// Result pinned to [`std::io::Error`]
     pub type Result = crate::impls::result::hkt::ResultOk<std::io::Error>;
+  }
   }
 }
 
 /// Glob import that provides all of the `naan` typeclasses
 pub mod prelude {
+  pub use crate::Equiv;
   pub use crate::alt::*;
   pub use crate::apply::*;
   pub use crate::bifunctor::*;
@@ -701,7 +706,38 @@ pub mod prelude {
   pub use crate::monad::*;
   pub use crate::semigroup::*;
   pub use crate::traverse::*;
+  // pub use crate::io::*;
+  pub use crate::impls::identity::*;
   pub use crate::{deriving, hkt, HKT1, HKT2};
+}
+
+/// An `Equiv` type is one that has a simpler equivalent
+/// representation.
+///
+/// # Example - Iterators
+/// In the following example, `iter` `map` and `filter` are all
+/// conceptually "an iterator over `usize`"
+/// ```
+/// use std::iter::{Map, Filter};
+///
+/// let vec: Vec<usize> = vec![1, 2, 3, 4, 5];
+/// let iter: std::vec::IntoIter<usize> = vec.into_iter();
+/// let map: Map<std::vec::IntoIter<usize>, _> = iter.map(|n| n + 1);
+/// let filter: Filter<Map<std::vec::IntoIter<usize>, _>, _> = map.filter(|n| n % 2 == 0);
+/// ```
+/// this would imply:
+/// ```ignore
+/// <std::vec::IntoIter<usize> as Equiv>::To == std::vec::IntoIter<usize>
+/// <Map<std::vec::IntoIter<usize>, _> as Equiv>::To == std::vec::IntoIter<usize>
+/// <Filter<Map<std::vec::IntoIter<usize>, _>, _> as Equiv>::To == std::vec::IntoIter<usize>
+/// ```
+///
+/// Other examples:
+/// * `Result<A, Infallible>` is `Equiv::To` `Result<A, !>` (and vice versa)
+/// * `IO<Lazy>` is `Equiv::To` `IO<Lazy::T>` (`IO<Suspend<_, usize>>` == `IO<usize>`)
+pub trait Equiv {
+  /// The type that `Self` is equivalent to
+  type To;
 }
 
 /// A marker that points to a type with 1 generic

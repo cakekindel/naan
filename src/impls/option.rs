@@ -15,7 +15,7 @@ pub mod hkt {
 }
 
 impl<A> FunctorOnce<hkt::Option, A> for Option<A> {
-  fn fmap1<B>(self, f: impl F1Once<A, B>) -> Option<B> {
+    fn fmap1<AB, B>(self, f: AB) -> Option<B> where AB: F1Once<A, B> {
     self.map(|a| f.call1(a))
   }
 }
