@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.20 (2022-12-20)
+
+
+### Bug Fixes
+
+* Functor1 should use generics, add Equiv trait ([5f1e43b](https://github.com/cakekindel/naan/commit/5f1e43bbab32c9c410cc787cb199090277bb4552))
+
 ### 0.1.19 (2022-12-10)
 
 ### 0.1.18 (2022-12-10)
