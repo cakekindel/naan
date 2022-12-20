@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.21 (2022-12-20)
+
+
+### Features
+
+* function traits should store output in an associated type ([649b6e7](https://github.com/cakekindel/naan/commit/649b6e725b1502443f73eee73f505768b7c9c3e4))
+
 ### 0.1.20 (2022-12-20)
 
 
