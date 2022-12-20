@@ -806,14 +806,14 @@ pub trait HKT2 {
 macro_rules! deriving {
   (impl$(<$($vars:ident),+>)? Functor<$hkt:ty, $a:ident> for $t:ty {..FunctorOnce}) => {
     impl<$a, $($($vars),+)?> Functor<$hkt, $a> for $t {
-      fn fmap<AB, B>(self, f: AB) -> <$hkt as HKT1>::T<B> where AB: F1<A, B> {
+      fn fmap<AB, B>(self, f: AB) -> <$hkt as HKT1>::T<B> where AB: F1<A, Ret = B> {
         self.fmap1(f)
       }
     }
   };
   (impl$(<$($vars:ident),+>)? Bifunctor<$hkt:ty, $a:ident, $b:ident> for $t:ty {..BifunctorOnce}) => {
     impl<$a, $b, $($($vars),+)?> Bifunctor<$hkt, $a, $b> for $t {
-      fn bimap<AB, BB, FA, FB>(self, fa: FA, fb: FB) -> <$hkt as HKT2>::T<AB, BB> where FA: F1<$a, AB>, FB: F1<$b, BB> {
+      fn bimap<AB, BB, FA, FB>(self, fa: FA, fb: FB) -> <$hkt as HKT2>::T<AB, BB> where FA: F1<$a, Ret = AB>, FB: F1<$b, Ret = BB> {
         self.bimap1(fa, fb)
       }
     }
@@ -821,8 +821,8 @@ macro_rules! deriving {
   (impl$(<$($vars:ident),+>)? Apply<$hkt:ty, $ab:ident> for $t:ty {..ApplyOnce}) => {
     impl<$ab, $($($vars),+)?> Apply<$hkt, $ab> for $t {
   fn apply_clone_with<A, B, Cloner>(self, a: <$hkt as HKT1>::T<A>, _: Cloner) -> <$hkt as HKT1>::T<B>
-      where AB: F1<A, B>,
-            Cloner: for<'a> F1<&'a A, A>
+      where AB: F1<A, Ret = B>,
+            Cloner: for<'a> F1<&'a A, Ret = A>
             {
         self.apply1(a)
       }
@@ -852,25 +852,25 @@ macro_rules! deriving {
   (impl$(<$($vars:ident),+>)? Foldable<$hkt:ty, $a:ident> for $t:ty {..FoldableOnce}) => {
     impl<$a, $($($vars),+)?> Foldable<$hkt, $a> for $t {
       fn foldl<B, BAB>(self, f: BAB, b: B) -> B
-      where BAB: F2<B, A, B> {
+      where BAB: F2<B, A, Ret = B> {
         self.fold1(f, b)
       }
 
       fn foldr<B, ABB>(self, f: ABB, b: B) -> B
-      where ABB: F2<A, B, B> {
+      where ABB: F2<A, B, Ret = B> {
         self.fold1(|a, b| f.call(b, a), b)
       }
 
 
   /// Fold the data structure from left -> right
   fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
-  where BAB: F2<B, &'a A, B>, A: 'a {
+  where BAB: F2<B, &'a A, Ret = B>, A: 'a {
     self.fold1_ref(f, b)
   }
 
   /// Fold the data structure from right -> left
   fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
-    where ABB: F2<&'a A, B, B>, A: 'a {
+    where ABB: F2<&'a A, B, Ret = B>, A: 'a {
     self.fold1_ref(|a, b| f.call(b, a), b)
     }}
   };
@@ -881,7 +881,7 @@ macro_rules! deriving {
       Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
       Ap::T<$tf>: Applicative<Ap, $tf> + ApplyOnce<Ap, $tf>,
       Ap::T<<$hkt as HKT1>::T<B>>: Applicative<Ap, <$hkt as HKT1>::T<B>> + ApplyOnce<Ap, <$hkt as HKT1>::T<B>>,
-      AtoApOfB: F1<A, Ap::T<B>> {
+      AtoApOfB: F1<A, Ret = Ap::T<B>> {
         self.traverse11::<Ap, AtoApOfB>(f)
       }
 
@@ -890,7 +890,7 @@ macro_rules! deriving {
       Ap::T<B>: Applicative<Ap, B>,
       Ap::T<$tf>: Applicative<Ap, $tf>,
       Ap::T<<$hkt as HKT1>::T<B>>: Applicative<Ap, <$hkt as HKT1>::T<B>>,
-      AtoApOfB: F1<A, Ap::T<B>>
+      AtoApOfB: F1<A, Ret = Ap::T<B>>
        {
         self.traverse1m::<Ap, AtoApOfB>(f)
       }
@@ -898,7 +898,7 @@ macro_rules! deriving {
   };
   (impl$(<$($vars:ident),+>)? Monad<$hkt:ty, $a:ident> for $t:ty {..MonadOnce}) => {
     impl<$a, $($($vars),+)?> Monad<$hkt, $a> for $t {
-      fn bind<B, AMB>(self, f: AMB) -> <$hkt as HKT1>::T<B> where AMB: F1<$a, <$hkt as HKT1>::T<B>> {
+      fn bind<B, AMB>(self, f: AMB) -> <$hkt as HKT1>::T<B> where AMB: F1<$a, Ret = <$hkt as HKT1>::T<B>> {
         self.bind1(f)
       }
     }

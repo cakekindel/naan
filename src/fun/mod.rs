@@ -62,16 +62,19 @@ pub type call_deref<F, A, B> = fn(f: F, a: A) -> B;
 /// Used by [`F1Once::chain_ref`].
 pub fn call_deref<F, A, ADeref: ?Sized, B>(f: F, a: A) -> B
   where A: Deref<Target = ADeref>,
-        F: for<'a> F1Once<&'a ADeref, B>
+        F: for<'a> F1Once<&'a ADeref, Ret = B>
 {
   f.call1(a.deref())
 }
 
 /// A function that accepts 1 argument
 /// and can be called at most once.
-pub trait F1Once<A, B> {
+pub trait F1Once<A> {
+  /// The type returned by this function
+  type Ret;
+
   /// Call the function
-  fn call1(self, a: A) -> B;
+  fn call1(self, a: A) -> Self::Ret;
 
   /// Create a new function that passes this one's output to `g`'s input
   ///
@@ -183,9 +186,9 @@ pub trait F1Once<A, B> {
   /// Once all type errors are resolved, the Box debugging can be undone and you can use the concrete
   /// nested `Compose` types.
   /// </details>
-  fn chain<G, C>(self, g: G) -> Compose<Self, G, B>
+  fn chain<G, C>(self, g: G) -> Compose<Self, G, Self::Ret>
     where Self: Sized,
-          G: F1Once<B, C>
+          G: F1Once<Self::Ret, Ret = C>
   {
     Compose::compose(self, g)
   }
@@ -198,23 +201,27 @@ pub trait F1Once<A, B> {
   fn chain_ref<G, BDeref: ?Sized, C>(
     self,
     g: G)
-    -> Compose<Self, curry2::Applied1<call_deref<G, B, C>, G, B, C>, B>
+    -> Compose<Self, curry2::Applied1<call_deref<G, Self::Ret, C>, G, Self::Ret, C>, Self::Ret>
     where Self: Sized,
-          G: for<'a> F1Once<&'a BDeref, C>,
-          B: Deref<Target = BDeref>
+          G: for<'any> F1Once<&'any BDeref, Ret = C>,
+          Self::Ret: Deref<Target = BDeref>
   {
-    Compose::compose(self, (call_deref as call_deref<G, B, C>).curry().call(g))
+    Compose::compose(self,
+                     (call_deref as call_deref<G, Self::Ret, C>).curry().call(g))
   }
 }
 
 /// A function that accepts 2 arguments
 /// and can be called at most once.
-pub trait F2Once<A, B, C>: Sized {
+pub trait F2Once<A, B>: Sized {
+  /// The type returned by this function
+  type Ret;
+
   /// The concrete type that `curry` returns.
   type Curried;
 
   /// Call the function
-  fn call1(self, a: A, b: B) -> C;
+  fn call1(self, a: A, b: B) -> Self::Ret;
 
   /// Curry this function, transforming it from
   /// `fn(A, B) -> C` to `fn(A) -> fn(B) -> C`
@@ -223,62 +230,68 @@ pub trait F2Once<A, B, C>: Sized {
 
 /// A function that accepts 3 arguments
 /// and can be called at most once.
-pub trait F3Once<A, B, C, D>: Sized {
+pub trait F3Once<A, B, C>: Sized {
+  /// The type returned by this function
+  type Ret;
+
   /// The concrete type that `curry` returns.
   type Curried;
 
   /// Call the function
-  fn call1(self, a: A, b: B, c: C) -> D;
+  fn call1(self, a: A, b: B, c: C) -> Self::Ret;
 
   /// Curry this function, transforming it from
-  /// `fn(A, B, C) -> D` to `fn(A) -> fn(B) -> fn(C) -> D`
+  /// `fn(A, B, C) -> D` to `fn(A) -> fn(B) -> fn(C) -> Self::Ret`
   fn curry(self) -> Self::Curried;
 }
 
 /// A function that accepts 1 argument
 /// and can be called any number of times.
-pub trait F1<A, B>: F1Once<A, B> {
+pub trait F1<A>: F1Once<A> {
   /// Call the function
-  fn call(&self, a: A) -> B;
+  fn call(&self, a: A) -> Self::Ret;
 }
 
 /// A function that accepts 2 arguments
 /// and can be called any number of times.
-pub trait F2<A, B, C>: F2Once<A, B, C> {
+pub trait F2<A, B>: F2Once<A, B> {
   /// Call the function with all arguments
-  fn call(&self, a: A, b: B) -> C;
+  fn call(&self, a: A, b: B) -> Self::Ret;
 }
 
 /// A function that accepts 3 arguments
 /// and can be called any number of times.
-pub trait F3<A, B, C, D>: F3Once<A, B, C, D> {
+pub trait F3<A, B, C, D>: F3Once<A, B, C> {
   /// Call the function with all arguments
-  fn call(&self, a: A, b: B, c: C) -> D;
+  fn call(&self, a: A, b: B, c: C) -> Self::Ret;
 }
 
-impl<F, A, B> F1<A, B> for F where F: Fn(A) -> B
+impl<F, A, B> F1<A> for F where F: Fn(A) -> B
 {
   fn call(&self, a: A) -> B {
     self(a)
   }
 }
 
-impl<F, A, B> F1Once<A, B> for F where F: FnOnce(A) -> B
+impl<'a, F, A, B> F1Once<A> for F where F: FnOnce(A) -> B
 {
+  type Ret = B;
+
   fn call1(self, a: A) -> B {
     self(a)
   }
 }
 
-impl<F, A, B, C> F2<A, B, C> for F where F: Fn(A, B) -> C
+impl<F, A, B, C> F2<A, B> for F where F: Fn(A, B) -> C
 {
-  fn call(&self, a: A, b: B) -> C {
+  fn call(&self, a: A, b: B) -> Self::Ret {
     self(a, b)
   }
 }
 
-impl<F, A, B, C> F2Once<A, B, C> for F where F: FnOnce(A, B) -> C
+impl<F, A, B, C> F2Once<A, B> for F where F: FnOnce(A, B) -> C
 {
+  type Ret = C;
   type Curried = curry2::Applied0<Self, A, B, C>;
 
   fn call1(self, a: A, b: B) -> C {
@@ -297,8 +310,9 @@ impl<F, A, B, C, D> F3<A, B, C, D> for F where F: Fn(A, B, C) -> D
   }
 }
 
-impl<F, A, B, C, D> F3Once<A, B, C, D> for F where F: FnOnce(A, B, C) -> D
+impl<F, A, B, C, D> F3Once<A, B, C> for F where F: FnOnce(A, B, C) -> D
 {
+  type Ret = D;
   type Curried = curry3::Applied0<Self, A, B, C, D>;
 
   fn call1(self, a: A, b: B, c: C) -> D {

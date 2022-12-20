@@ -8,7 +8,7 @@ pub trait MonadOnce<M, A>: Monad<M, A>
 {
   /// See [`MonadOnce`]
   fn bind1<B, AMB>(self, f: AMB) -> M::T<B>
-    where AMB: F1Once<A, M::T<B>>;
+    where AMB: F1Once<A, Ret = M::T<B>>;
 }
 
 /// `Monad` generalizes the concept of a *sequence of computations*,
@@ -39,7 +39,7 @@ pub trait Monad<M, A>
 {
   /// See [`Monad`]
   fn bind<B, AMB>(self, f: AMB) -> M::T<B>
-    where AMB: F1<A, M::T<B>>;
+    where AMB: F1<A, Ret = M::T<B>>;
 
   /// Flatten a nested `Monad`
   /// ```

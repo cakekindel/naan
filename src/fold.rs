@@ -7,11 +7,11 @@ pub trait FoldableOnce<F, A>
 {
   /// Fold the data structure
   fn fold1<B, BAB>(self, f: BAB, b: B) -> B
-    where BAB: F2Once<B, A, B>;
+    where BAB: F2Once<B, A, Ret = B>;
 
   /// Fold the data structure
   fn fold1_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
-    where BAB: F2Once<B, &'a A, B>,
+    where BAB: F2Once<B, &'a A, Ret = B>,
           A: 'a;
 
   /// Unwrap the data structure, using a provided default value if empty
@@ -108,20 +108,20 @@ pub trait Foldable<F, A>
 {
   /// Fold the data structure from left -> right
   fn foldl<B, BAB>(self, f: BAB, b: B) -> B
-    where BAB: F2<B, A, B>;
+    where BAB: F2<B, A, Ret = B>;
 
   /// Fold the data structure from right -> left
   fn foldr<B, ABB>(self, f: ABB, b: B) -> B
-    where ABB: F2<A, B, B>;
+    where ABB: F2<A, B, Ret = B>;
 
   /// Fold the data structure from left -> right
   fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
-    where BAB: F2<B, &'a A, B>,
+    where BAB: F2<B, &'a A, Ret = B>,
           A: 'a;
 
   /// Fold the data structure from right -> left
   fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
-    where ABB: F2<&'a A, B, B>,
+    where ABB: F2<&'a A, B, Ret = B>,
           A: 'a;
 
   /// Fold the data structure, accumulating the values into a [`Monoid`].
@@ -135,7 +135,7 @@ pub trait Foldable<F, A>
   /// ```
   fn fold_map<AB, B>(self, f: AB) -> B
     where Self: Sized,
-          AB: F1<A, B>,
+          AB: F1<A, Ret = B>,
           B: Monoid
   {
     self.foldl(|b, a| B::append(b, f.call(a)), B::identity())
@@ -238,7 +238,7 @@ pub trait Foldable<F, A>
   /// assert_eq!(strings.any(|s: &String| s.len() > 2), true);
   /// ```
   fn any<'a, P>(&'a self, f: P) -> bool
-    where P: F1<&'a A, bool>,
+    where P: F1<&'a A, Ret = bool>,
           A: 'a
   {
     self.foldl_ref(|pass: bool, cur| if !pass { f.call(cur) } else { true },
@@ -255,7 +255,7 @@ pub trait Foldable<F, A>
   /// assert_eq!(strings.all(|s: &String| s.len() < 4), true);
   /// ```
   fn all<'a, P>(&'a self, f: P) -> bool
-    where P: F1<&'a A, bool>,
+    where P: F1<&'a A, Ret = bool>,
           A: 'a
   {
     self.foldl_ref(|pass: bool, cur| if pass && f.call(cur) { true } else { false },
@@ -289,7 +289,7 @@ pub trait Foldable<F, A>
   /// Fold values until a match is found
   fn find_map<AB, B>(self, f: AB) -> Option<B>
     where Self: Sized,
-          AB: F1<A, Option<B>>
+          AB: F1<A, Ret = Option<B>>
   {
     self.foldl(|found: Option<B>, a| found.fmap(Some).get_or(f.call(a)),
                None)
@@ -298,7 +298,7 @@ pub trait Foldable<F, A>
   /// Fold values until a match is found
   fn find<P>(self, f: P) -> Option<A>
     where Self: Sized,
-          P: for<'a> F1<&'a A, bool>
+          P: for<'a> F1<&'a A, Ret = bool>
   {
     self.find_map(|a| Some(a).filter(|a| f.call(a)))
   }

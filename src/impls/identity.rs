@@ -39,10 +39,12 @@ pub mod hkt {
 pub struct Id<T>(pub T);
 
 impl<T> Id<T> {
+  /// Wrap a type in [`Id`]
   pub fn new(t: T) -> Self {
     Self(t)
   }
 
+  /// Unwrap this [`Id`]
   pub fn get(self) -> T {
     self.0
   }
@@ -109,7 +111,7 @@ impl<T> Monoid for Id<T> where T: Monoid
 
 impl<T> FunctorOnce<hkt::Id, T> for Id<T> {
   fn fmap1<AB, B>(self, f: AB) -> Id<B>
-    where AB: F1Once<T, B>
+    where AB: F1Once<T, Ret = B>
   {
     Id(f.call1(self.0))
   }
@@ -118,7 +120,7 @@ deriving!(impl Functor<hkt::Id, A> for Id<A> {..FunctorOnce});
 
 impl<T> MonadOnce<hkt::Id, T> for Id<T> {
   fn bind1<B, AMB>(self, f: AMB) -> Id<B>
-    where AMB: F1Once<T, Id<B>>
+    where AMB: F1Once<T, Ret = Id<B>>
   {
     f.call1(self.0)
   }
@@ -127,7 +129,7 @@ deriving!(impl Monad<hkt::Id, A> for Id<A> {..MonadOnce});
 
 impl<T> ApplyOnce<hkt::Id, T> for Id<T> {
   fn apply1<A, B>(self, a: Id<A>) -> Id<B>
-    where T: F1Once<A, B>
+    where T: F1Once<A, Ret = B>
   {
     Id(self.0.call1(a.0))
   }

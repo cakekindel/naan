@@ -21,8 +21,8 @@ pub struct Compose<F, G, X> {
 impl<F, G, X> Compose<F, G, X> {
   /// See [`Compose`]
   pub fn compose<A, B>(f: F, g: G) -> Self
-    where F: F1Once<A, X>,
-          G: F1Once<X, B>
+    where F: F1Once<A, Ret = X>,
+          G: F1Once<X, Ret = B>
   {
     Self { f,
            g,
@@ -31,9 +31,9 @@ impl<F, G, X> Compose<F, G, X> {
 
   /// See [`F1Once::chain`]
   pub fn chain<A, B, X2, G2>(self, g2: G2) -> Compose<Compose<F, G, X>, G2, X2>
-    where F: F1Once<A, X>,
-          G: F1Once<X, X2>,
-          G2: F1Once<X2, B>
+    where F: F1Once<A, Ret = X>,
+          G: F1Once<X, Ret = X2>,
+          G2: F1Once<X2, Ret = B>
   {
     Compose { f: self,
               g: g2,
@@ -41,18 +41,19 @@ impl<F, G, X> Compose<F, G, X> {
   }
 }
 
-impl<F, G, A, X, C> F1Once<A, C> for Compose<F, G, X>
-  where F: F1Once<A, X>,
-        G: F1Once<X, C>
+impl<F, G, A, X, C> F1Once<A> for Compose<F, G, X>
+  where F: F1Once<A, Ret = X>,
+        G: F1Once<X, Ret = C>
 {
+  type Ret = C;
   fn call1(self, a: A) -> C {
     self.g.call1(self.f.call1(a))
   }
 }
 
-impl<F, G, A, X, C> F1<A, C> for Compose<F, G, X>
-  where F: F1<A, X>,
-        G: F1<X, C>
+impl<F, G, A, X, C> F1<A> for Compose<F, G, X>
+  where F: F1<A, Ret = X>,
+        G: F1<X, Ret = C>
 {
   fn call(&self, a: A) -> C {
     self.g.call(self.f.call(a))

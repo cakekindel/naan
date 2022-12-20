@@ -26,7 +26,7 @@ pub mod hkt {
 
 impl<A, E> FunctorOnce<hkt::ResultOk<E>, A> for Result<A, E> {
   fn fmap1<AB, B>(self, f: AB) -> Result<B, E>
-    where AB: F1Once<A, B>
+    where AB: F1Once<A, Ret = B>
   {
     self.map(|a| f.call1(a))
   }
@@ -35,7 +35,7 @@ deriving!(impl<E> Functor<hkt::ResultOk<E>, A> for Result<A, E> {..FunctorOnce})
 
 impl<AB, E> ApplyOnce<hkt::ResultOk<E>, AB> for Result<AB, E> {
   fn apply1<A, B>(self, a: Result<A, E>) -> Result<B, E>
-    where AB: F1Once<A, B>
+    where AB: F1Once<A, Ret = B>
   {
     match self {
       | Ok(f) => a.map(|a| f.call1(a)),
@@ -59,13 +59,13 @@ impl<A, E> Alt<hkt::ResultOk<E>, A> for Result<A, E> {
 
 impl<A, E> FoldableOnce<hkt::ResultOk<E>, A> for Result<A, E> {
   fn fold1<B, BAB>(self, f: BAB, b: B) -> B
-    where BAB: F2Once<B, A, B>
+    where BAB: F2Once<B, A, Ret = B>
   {
     self.ok().fold1(f, b)
   }
 
   fn fold1_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
-    where BAB: F2Once<B, &'a A, B>,
+    where BAB: F2Once<B, &'a A, Ret = B>,
           A: 'a
   {
     match self {
@@ -84,7 +84,7 @@ impl<A, B, E> TraversableOnce<hkt::ResultOk<E>, A, B, ()> for Result<A, E>
     where Ap: HKT1,
           Ap::T<B>: Applicative<Ap, B>,
           Ap::T<Result<B, E>>: Applicative<Ap, Result<B, E>>,
-          AtoApOfB: F1Once<A, Ap::T<B>>
+          AtoApOfB: F1Once<A, Ret = Ap::T<B>>
   {
     match self {
       | Ok(a) => f.call1(a).fmap(Ok),
@@ -97,7 +97,7 @@ impl<A, B, E> TraversableOnce<hkt::ResultOk<E>, A, B, ()> for Result<A, E>
           Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
           Ap::T<()>: Applicative<Ap, ()> + ApplyOnce<Ap, ()>,
           Ap::T<Result<B, E>>: Applicative<Ap, Result<B, E>> + ApplyOnce<Ap, Result<B, E>>,
-          AtoApOfB: F1Once<A, Ap::T<B>>
+          AtoApOfB: F1Once<A, Ret = Ap::T<B>>
   {
     self.traverse1m::<Ap, AtoApOfB>(f)
   }
@@ -106,7 +106,7 @@ deriving!(impl<E> Traversable<hkt::ResultOk<E>, A, B, ()> for Result<A, E> {..Tr
 
 impl<A, E> MonadOnce<hkt::ResultOk<E>, A> for Result<A, E> {
   fn bind1<B, AMB>(self, f: AMB) -> Result<B, E>
-    where AMB: F1Once<A, Result<B, E>>
+    where AMB: F1Once<A, Ret = Result<B, E>>
   {
     self.and_then(|a| f.call1(a))
   }
@@ -115,8 +115,8 @@ deriving!(impl<E> Monad<hkt::ResultOk<E>, A> for Result<A, E> {..MonadOnce});
 
 impl<A, E> BifunctorOnce<hkt::Result, A, E> for Result<A, E> {
   fn bimap1<AB, BB, FA, FB>(self, fa: FA, fb: FB) -> <hkt::Result as HKT2>::T<AB, BB>
-    where FA: F1Once<A, AB>,
-          FB: F1Once<E, BB>
+    where FA: F1Once<A, Ret = AB>,
+          FB: F1Once<E, Ret = BB>
   {
     match self {
       | Ok(a) => Ok(fa.call1(a)),

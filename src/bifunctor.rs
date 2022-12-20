@@ -9,15 +9,15 @@ pub trait BifunctorOnce<F, A, B>
 {
   /// See [`Bifunctor`]
   fn bimap1<A2, B2, FA, FB>(self, fa: FA, fb: FB) -> F::T<A2, B2>
-    where FA: F1Once<A, A2>,
-          FB: F1Once<B, B2>;
+    where FA: F1Once<A, Ret = A2>,
+          FB: F1Once<B, Ret = B2>;
 
   /// Map the left type in the Bifunctor
   ///
   /// In Result, this maps the "Ok" type and is equivalent to `map`.
   fn lmap1<A2, FA>(self, fa: FA) -> F::T<A2, B>
     where Self: Sized,
-          FA: F1Once<A, A2>
+          FA: F1Once<A, Ret = A2>
   {
     self.bimap1(fa, |b| b)
   }
@@ -27,7 +27,7 @@ pub trait BifunctorOnce<F, A, B>
   /// In Result, this maps the "Error" type and is equivalent to `map_err`.
   fn rmap1<B2, FB>(self, fb: FB) -> F::T<A, B2>
     where Self: Sized,
-          FB: F1Once<B, B2>
+          FB: F1Once<B, Ret = B2>
   {
     self.bimap1(|a| a, fb)
   }
@@ -57,15 +57,15 @@ pub trait Bifunctor<F, A, B>
 {
   /// See [`Bifunctor`]
   fn bimap<A2, B2, FA, FB>(self, fa: FA, fb: FB) -> F::T<A2, B2>
-    where FA: F1<A, A2>,
-          FB: F1<B, B2>;
+    where FA: F1<A, Ret = A2>,
+          FB: F1<B, Ret = B2>;
 
   /// Map the left type in the Bifunctor
   ///
   /// In Result, this maps the "Ok" type and is equivalent to `map`.
   fn lmap<A2, FA>(self, fa: FA) -> F::T<A2, B>
     where Self: Sized,
-          FA: F1<A, A2>
+          FA: F1<A, Ret = A2>
   {
     self.bimap(fa, |b| b)
   }
@@ -75,7 +75,7 @@ pub trait Bifunctor<F, A, B>
   /// In Result, this maps the "Error" type and is equivalent to `map_err`.
   fn rmap<B2, FB>(self, fb: FB) -> F::T<A, B2>
     where Self: Sized,
-          FB: F1<B, B2>
+          FB: F1<B, Ret = B2>
   {
     self.bimap(|a| a, fb)
   }
@@ -142,7 +142,7 @@ impl<M, T, A> Functor<JoinHKT<M>, A> for Join<M, T, A>
         T: Bifunctor<M, A, A>
 {
   fn fmap<AB, B>(self, f: AB) -> <JoinHKT<M> as HKT1>::T<B>
-    where AB: F1<A, B>
+    where AB: F1<A, Ret = B>
   {
     JoinHKT::<M>::join::<B>(self.0.bimap(|a| f.call(a), |b| f.call(b)))
   }

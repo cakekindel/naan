@@ -8,7 +8,7 @@ pub trait ApplyOnce<F, AB>
 {
   /// See [`ApplyOnce`]
   fn apply1<A, B>(self, a: F::T<A>) -> F::T<B>
-    where AB: F1Once<A, B>;
+    where AB: F1Once<A, Ret = B>;
 }
 
 /// `Apply` generalizes [`Functor`] to any arity.
@@ -75,7 +75,7 @@ pub trait Apply<F, AB>
   /// See [`Apply`]
   fn apply<A, B>(self, a: F::T<A>) -> F::T<B>
     where Self: Sized,
-          AB: F1<A, B>,
+          AB: F1<A, Ret = B>,
           A: Clone
   {
     self.apply_clone_with(a, Clone::clone)
@@ -83,8 +83,8 @@ pub trait Apply<F, AB>
 
   /// See [`Apply`]
   fn apply_clone_with<A, B, Cloner>(self, a: F::T<A>, cloner: Cloner) -> F::T<B>
-    where AB: F1<A, B>,
-          Cloner: for<'a> F1<&'a A, A>;
+    where AB: F1<A, Ret = B>,
+          Cloner: for<'a> F1<&'a A, Ret = A>;
 }
 
 /// Adds onto [`Apply`] the ability to lift a _value_

@@ -16,7 +16,7 @@ pub mod hkt {
 
 impl<A> FunctorOnce<hkt::Option, A> for Option<A> {
   fn fmap1<AB, B>(self, f: AB) -> Option<B>
-    where AB: F1Once<A, B>
+    where AB: F1Once<A, Ret = B>
   {
     self.map(|a| f.call1(a))
   }
@@ -25,7 +25,7 @@ deriving!(impl Functor<hkt::Option, A> for Option<A> {..FunctorOnce});
 
 impl<AB> ApplyOnce<hkt::Option, AB> for Option<AB> {
   fn apply1<A, B>(self, a: Option<A>) -> Option<B>
-    where AB: F1Once<A, B>
+    where AB: F1Once<A, Ret = B>
   {
     match self {
       | Some(f) => a.map(|a| f.call1(a)),
@@ -69,7 +69,7 @@ impl<A> Monoid for Option<A> where A: Semigroup
 
 impl<A> FoldableOnce<hkt::Option, A> for Option<A> {
   fn fold1<B, BAB>(self, f: BAB, b: B) -> B
-    where BAB: F2Once<B, A, B>
+    where BAB: F2Once<B, A, Ret = B>
   {
     match self {
       | Some(a) => f.call1(b, a),
@@ -78,7 +78,7 @@ impl<A> FoldableOnce<hkt::Option, A> for Option<A> {
   }
 
   fn fold1_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
-    where BAB: F2Once<B, &'a A, B>,
+    where BAB: F2Once<B, &'a A, Ret = B>,
           A: 'a
   {
     match self {
@@ -97,7 +97,7 @@ impl<A, B> TraversableOnce<hkt::Option, A, B, ()> for Option<A> {
           Ap::T<B>: Applicative<Ap, B>,
           Ap::T<()>: Applicative<Ap, ()>,
           Ap::T<Option<B>>: Applicative<Ap, Option<B>>,
-          AtoApOfB: F1Once<A, Ap::T<B>>,
+          AtoApOfB: F1Once<A, Ret = Ap::T<B>>,
           hkt::Option: HKT1<T<A> = Self>
   {
     match self {
@@ -111,7 +111,7 @@ impl<A, B> TraversableOnce<hkt::Option, A, B, ()> for Option<A> {
           Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
           Ap::T<()>: Applicative<Ap, ()> + ApplyOnce<Ap, ()>,
           Ap::T<Option<B>>: Applicative<Ap, Option<B>> + ApplyOnce<Ap, Option<B>>,
-          AtoApOfB: F1Once<A, Ap::T<B>>
+          AtoApOfB: F1Once<A, Ret = Ap::T<B>>
   {
     self.traverse1m::<Ap, AtoApOfB>(f)
   }
@@ -120,7 +120,7 @@ deriving!(impl Traversable<hkt::Option, A, B, ()> for Option<A> {..TraversableOn
 
 impl<A> MonadOnce<hkt::Option, A> for Option<A> {
   fn bind1<B, AMB>(self, f: AMB) -> Option<B>
-    where AMB: F1Once<A, Option<B>>
+    where AMB: F1Once<A, Ret = Option<B>>
   {
     self.and_then(|a| f.call1(a))
   }

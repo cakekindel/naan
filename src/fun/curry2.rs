@@ -35,7 +35,7 @@ impl<A, B, C, F> Copy for Curry2<F, A, B, C>
 {
 }
 
-impl<F, A, B, C> Applied0<F, A, B, C> where F: F2Once<A, B, C>
+impl<F, A, B, C> Applied0<F, A, B, C> where F: F2Once<A, B, Ret = C>
 {
   /// Curry a binary function
   pub fn curry(f: F) -> Self {
@@ -50,7 +50,7 @@ impl<F, A, B, C> Applied0<F, A, B, C> where F: F2Once<A, B, C>
   }
 }
 
-impl<F, A, B, C> F1<A, Applied1<F, A, B, C>> for Applied0<F, A, B, C> where F: Clone + Fn(A, B) -> C
+impl<F, A, B, C> F1<A> for Applied0<F, A, B, C> where F: Clone + Fn(A, B) -> C
 {
   fn call(&self, a: A) -> Applied1<F, A, B, C> {
     Applied1::<F, A, B, C> { a: Just(a),
@@ -59,8 +59,9 @@ impl<F, A, B, C> F1<A, Applied1<F, A, B, C>> for Applied0<F, A, B, C> where F: C
   }
 }
 
-impl<F, A, B, C> F1Once<A, Applied1<F, A, B, C>> for Applied0<F, A, B, C> where F: FnOnce(A, B) -> C
+impl<F, A, B, C> F1Once<A> for Applied0<F, A, B, C> where F: FnOnce(A, B) -> C
 {
+  type Ret = Applied1<F, A, B, C>;
   fn call1(self, a: A) -> Applied1<F, A, B, C> {
     Applied1::<F, A, B, C> { a: Just(a),
                              f: self.f,
@@ -68,7 +69,7 @@ impl<F, A, B, C> F1Once<A, Applied1<F, A, B, C>> for Applied0<F, A, B, C> where 
   }
 }
 
-impl<F, A, B, C> F1<B, C> for Applied1<F, A, B, C>
+impl<F, A, B, C> F1<B> for Applied1<F, A, B, C>
   where F: Fn(A, B) -> C,
         A: Clone
 {
@@ -77,8 +78,9 @@ impl<F, A, B, C> F1<B, C> for Applied1<F, A, B, C>
   }
 }
 
-impl<F, A, B, C> F1Once<B, C> for Applied1<F, A, B, C> where F: FnOnce(A, B) -> C
+impl<F, A, B, C> F1Once<B> for Applied1<F, A, B, C> where F: FnOnce(A, B) -> C
 {
+  type Ret = C;
   fn call1(self, b: B) -> C {
     (self.f)(self.a.0, b)
   }

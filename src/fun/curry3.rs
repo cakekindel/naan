@@ -34,7 +34,7 @@ impl<F, A, B, C, D> Clone for Curry3<F, A, B, C, D>
   }
 }
 
-impl<F, A, B, C, D> Applied0<F, A, B, C, D> where F: F3Once<A, B, C, D>
+impl<F, A, B, C, D> Applied0<F, A, B, C, D> where F: F3Once<A, B, C, Ret = D>
 {
   /// Curry a ternary function
   pub fn curry(f: F) -> Self {
@@ -50,8 +50,7 @@ impl<F, A, B, C, D> Applied0<F, A, B, C, D> where F: F3Once<A, B, C, D>
   }
 }
 
-impl<F, A, B, C, D> F1<A, Applied1<F, A, B, C, D>> for Applied0<F, A, B, C, D>
-  where F: Clone + Fn(A, B, C) -> D
+impl<F, A, B, C, D> F1<A> for Applied0<F, A, B, C, D> where F: Clone + Fn(A, B, C) -> D
 {
   fn call(&self, a: A) -> Applied1<F, A, B, C, D> {
     Applied1::<F, A, B, C, D> { a: Just(a),
@@ -61,9 +60,9 @@ impl<F, A, B, C, D> F1<A, Applied1<F, A, B, C, D>> for Applied0<F, A, B, C, D>
   }
 }
 
-impl<F, A, B, C, D> F1Once<A, Applied1<F, A, B, C, D>> for Applied0<F, A, B, C, D>
-  where F: FnOnce(A, B, C) -> D
+impl<F, A, B, C, D> F1Once<A> for Applied0<F, A, B, C, D> where F: FnOnce(A, B, C) -> D
 {
+  type Ret = Applied1<F, A, B, C, D>;
   fn call1(self, a: A) -> Applied1<F, A, B, C, D> {
     Applied1::<F, A, B, C, D> { a: Just(a),
                                 b: Nothing::new(),
@@ -72,7 +71,7 @@ impl<F, A, B, C, D> F1Once<A, Applied1<F, A, B, C, D>> for Applied0<F, A, B, C, 
   }
 }
 
-impl<F, A, B, C, D> F1<B, Applied2<F, A, B, C, D>> for Applied1<F, A, B, C, D>
+impl<F, A, B, C, D> F1<B> for Applied1<F, A, B, C, D>
   where F: Fn(A, B, C) -> D + Clone,
         A: Clone
 {
@@ -84,9 +83,9 @@ impl<F, A, B, C, D> F1<B, Applied2<F, A, B, C, D>> for Applied1<F, A, B, C, D>
   }
 }
 
-impl<F, A, B, C, D> F1Once<B, Applied2<F, A, B, C, D>> for Applied1<F, A, B, C, D>
-  where F: FnOnce(A, B, C) -> D
+impl<F, A, B, C, D> F1Once<B> for Applied1<F, A, B, C, D> where F: FnOnce(A, B, C) -> D
 {
+  type Ret = Applied2<F, A, B, C, D>;
   fn call1(self, b: B) -> Applied2<F, A, B, C, D> {
     Applied2::<F, A, B, C, D> { a: self.a,
                                 b: Just(b),
@@ -95,7 +94,7 @@ impl<F, A, B, C, D> F1Once<B, Applied2<F, A, B, C, D>> for Applied1<F, A, B, C, 
   }
 }
 
-impl<F, A, B, C, D> F1<C, D> for Applied2<F, A, B, C, D>
+impl<F, A, B, C, D> F1<C> for Applied2<F, A, B, C, D>
   where F: Fn(A, B, C) -> D,
         A: Clone,
         B: Clone
@@ -105,8 +104,9 @@ impl<F, A, B, C, D> F1<C, D> for Applied2<F, A, B, C, D>
   }
 }
 
-impl<F, A, B, C, D> F1Once<C, D> for Applied2<F, A, B, C, D> where F: FnOnce(A, B, C) -> D
+impl<F, A, B, C, D> F1Once<C> for Applied2<F, A, B, C, D> where F: FnOnce(A, B, C) -> D
 {
+  type Ret = D;
   fn call1(self, c: C) -> D {
     (self.f)(self.a.0, self.b.0, c)
   }

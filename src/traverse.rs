@@ -131,7 +131,7 @@ pub trait TraversableOnce<F, A, B, TF>: Traversable<F, A, B, TF> {
           Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
           Ap::T<TF>: Applicative<Ap, TF> + ApplyOnce<Ap, TF>,
           Ap::T<F::T<B>>: Applicative<Ap, F::T<B>> + ApplyOnce<Ap, F::T<B>>,
-          AtoApOfB: F1Once<A, Ap::T<B>>,
+          AtoApOfB: F1Once<A, Ret = Ap::T<B>>,
           F: HKT1<T<A> = Self>;
 
   /// Traverse a structure with 0 or 1 elements, collecting into
@@ -142,7 +142,7 @@ pub trait TraversableOnce<F, A, B, TF>: Traversable<F, A, B, TF> {
           Ap::T<B>: Applicative<Ap, B>,
           Ap::T<TF>: Applicative<Ap, TF>,
           Ap::T<F::T<B>>: Applicative<Ap, F::T<B>>,
-          AtoApOfB: F1Once<A, Ap::T<B>>,
+          AtoApOfB: F1Once<A, Ret = Ap::T<B>>,
           F: HKT1<T<A> = Self>;
 
   /// Aliases [`TraversableOnce::traverse11`]
@@ -152,7 +152,7 @@ pub trait TraversableOnce<F, A, B, TF>: Traversable<F, A, B, TF> {
           Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
           Ap::T<TF>: Applicative<Ap, TF> + ApplyOnce<Ap, TF>,
           Ap::T<F::T<B>>: Applicative<Ap, F::T<B>> + ApplyOnce<Ap, F::T<B>>,
-          AtoApOfB: F1Once<A, Ap::T<B>>,
+          AtoApOfB: F1Once<A, Ret = Ap::T<B>>,
           F: HKT1<T<A> = Self>
   {
     self.traverse11::<Ap, AtoApOfB>(f)
@@ -165,7 +165,7 @@ pub trait TraversableOnce<F, A, B, TF>: Traversable<F, A, B, TF> {
           Ap::T<B>: Applicative<Ap, B>,
           Ap::T<TF>: Applicative<Ap, TF>,
           Ap::T<F::T<B>>: Applicative<Ap, F::T<B>>,
-          AtoApOfB: F1Once<A, Ap::T<B>>,
+          AtoApOfB: F1Once<A, Ret = Ap::T<B>>,
           F: HKT1<T<A> = Self>
   {
     self.traverse1m::<Ap, AtoApOfB>(f)
@@ -301,7 +301,7 @@ pub trait Traversable<F, A, B, TF> {
           Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
           Ap::T<TF>: Applicative<Ap, TF> + ApplyOnce<Ap, TF>,
           Ap::T<F::T<B>>: Applicative<Ap, F::T<B>> + ApplyOnce<Ap, F::T<B>>,
-          AtoApOfB: F1<A, Ap::T<B>>,
+          AtoApOfB: F1<A, Ret = Ap::T<B>>,
           F: HKT1<T<A> = Self>;
 
   /// Traverse a structure with 0 or more elements, collecting into
@@ -313,7 +313,7 @@ pub trait Traversable<F, A, B, TF> {
           Ap::T<B>: Applicative<Ap, B>,
           Ap::T<TF>: Applicative<Ap, TF>,
           Ap::T<F::T<B>>: Applicative<Ap, F::T<B>>,
-          AtoApOfB: F1<A, Ap::T<B>>,
+          AtoApOfB: F1<A, Ret = Ap::T<B>>,
           F: HKT1<T<A> = Self>;
 
   /// Aliases [`Traversable::traversem1`]
@@ -323,7 +323,7 @@ pub trait Traversable<F, A, B, TF> {
           Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
           Ap::T<TF>: Applicative<Ap, TF> + ApplyOnce<Ap, TF>,
           Ap::T<F::T<B>>: Applicative<Ap, F::T<B>> + ApplyOnce<Ap, F::T<B>>,
-          AtoApOfB: F1<A, Ap::T<B>>,
+          AtoApOfB: F1<A, Ret = Ap::T<B>>,
           F: HKT1<T<A> = Self>
   {
     self.traversem1::<Ap, AtoApOfB>(f)

@@ -7,7 +7,7 @@ pub trait FunctorOnce<F, A>
 {
   /// See [`FunctorOnce`]
   fn fmap1<AB, B>(self, f: AB) -> F::T<B>
-    where AB: F1Once<A, B>;
+    where AB: F1Once<A, Ret = B>;
 }
 
 /// Functor adds a mapping operation to generic types.
@@ -30,7 +30,7 @@ pub trait FunctorOnce<F, A>
 ///
 /// impl<A> Functor<ContainerHKT, A> for Container<A> {
 ///   fn fmap<AB, B>(self, f: AB) -> Container<B>
-///     where AB: F1<A, B>
+///     where AB: F1<A, Ret = B>
 ///   {
 ///     Container(f.call(self.0))
 ///   }
@@ -44,5 +44,5 @@ pub trait Functor<F, A>
 {
   /// See [`Functor`]
   fn fmap<AB, B>(self, f: AB) -> F::T<B>
-    where AB: F1<A, B>;
+    where AB: F1<A, Ret = B>;
 }

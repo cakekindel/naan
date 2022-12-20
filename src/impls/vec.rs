@@ -15,7 +15,7 @@ pub mod hkt {
 
 impl<A> Functor<hkt::Vec, A> for Vec<A> {
   fn fmap<AB, B>(self, f: AB) -> Vec<B>
-    where AB: F1<A, B>
+    where AB: F1<A, Ret = B>
   {
     self.into_iter().map(|a| f.call(a)).collect()
   }
@@ -26,8 +26,8 @@ impl<AB> Apply<hkt::Vec, AB> for Vec<AB> {
                                     a: <hkt::Vec as HKT1>::T<A>,
                                     cloner: Cloner)
                                     -> <hkt::Vec as HKT1>::T<B>
-    where AB: F1<A, B>,
-          Cloner: for<'a> F1<&'a A, A>
+    where AB: F1<A, Ret = B>,
+          Cloner: for<'a> F1<&'a A, Ret = A>
   {
     self.into_iter()
         .map(move |f| a.iter().map(|a| f.call(cloner.call(a))).collect::<Vec<B>>())
@@ -55,26 +55,26 @@ deriving!(impl<A> Monoid for Vec<A> {..Default});
 
 impl<A> Foldable<hkt::Vec, A> for Vec<A> {
   fn foldl<B, BAB>(self, f: BAB, b: B) -> B
-    where BAB: F2<B, A, B>
+    where BAB: F2<B, A, Ret = B>
   {
     self.into_iter().fold(b, |b, a| f.call(b, a))
   }
 
   fn foldr<B, ABB>(self, f: ABB, b: B) -> B
-    where ABB: F2<A, B, B>
+    where ABB: F2<A, B, Ret = B>
   {
     self.into_iter().rfold(b, |b, a| f.call(a, b))
   }
 
   fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
-    where BAB: F2<B, &'a A, B>,
+    where BAB: F2<B, &'a A, Ret = B>,
           A: 'a
   {
     self.iter().fold(b, |b, a| f.call(b, a))
   }
 
   fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
-    where ABB: F2<&'a A, B, B>,
+    where ABB: F2<&'a A, B, Ret = B>,
           A: 'a
   {
     self.iter().rfold(b, |b, a| f.call(a, b))
@@ -105,7 +105,7 @@ impl<A, B> Traversable<hkt::Vec, A, B, append1<B>> for Vec<A> {
           Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
           Ap::T<append1<B>>: Applicative<Ap, append1<B>> + ApplyOnce<Ap, append1<B>>,
           Ap::T<Vec<B>>: Applicative<Ap, Vec<B>> + ApplyOnce<Ap, Vec<B>>,
-          AtoApOfB: F1<A, Ap::T<B>>,
+          AtoApOfB: F1<A, Ret = Ap::T<B>>,
           hkt::Vec: HKT1<T<A> = Self>
   {
     self.foldl(|ap, a| f.call(a).fmap((append as append<B>).curry()).apply1(ap),
@@ -119,7 +119,7 @@ impl<A, B> Traversable<hkt::Vec, A, B, append1<B>> for Vec<A> {
           Ap::T<B>: Applicative<Ap, B>,
           Ap::T<append1<B>>: Applicative<Ap, append1<B>>,
           Ap::T<Vec<B>>: Applicative<Ap, Vec<B>>,
-          AtoApOfB: F1<A, Ap::T<B>>,
+          AtoApOfB: F1<A, Ret = Ap::T<B>>,
           hkt::Vec: HKT1<T<A> = Self>
   {
     self.foldl(|ap, a| f.call(a).fmap((append as append<B>).curry()).apply(ap),
@@ -129,7 +129,7 @@ impl<A, B> Traversable<hkt::Vec, A, B, append1<B>> for Vec<A> {
 
 impl<A> Monad<hkt::Vec, A> for Vec<A> {
   fn bind<B, AMB>(self, f: AMB) -> Vec<B>
-    where AMB: F1<A, Vec<B>>
+    where AMB: F1<A, Ret = Vec<B>>
   {
     let mut out = Vec::<B>::new();
 
