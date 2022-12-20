@@ -25,7 +25,9 @@ pub mod hkt {
 }
 
 impl<A, E> FunctorOnce<hkt::ResultOk<E>, A> for Result<A, E> {
-    fn fmap1<AB, B>(self, f: AB) -> Result<B, E> where AB: F1Once<A, B> {
+  fn fmap1<AB, B>(self, f: AB) -> Result<B, E>
+    where AB: F1Once<A, B>
+  {
     self.map(|a| f.call1(a))
   }
 }

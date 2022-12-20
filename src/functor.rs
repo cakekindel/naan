@@ -6,7 +6,8 @@ pub trait FunctorOnce<F, A>
   where F: HKT1<T<A> = Self>
 {
   /// See [`FunctorOnce`]
-  fn fmap1<AB, B>(self, f: AB) -> F::T<B> where AB: F1Once<A, B>;
+  fn fmap1<AB, B>(self, f: AB) -> F::T<B>
+    where AB: F1Once<A, B>;
 }
 
 /// Functor adds a mapping operation to generic types.

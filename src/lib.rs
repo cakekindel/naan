@@ -676,24 +676,23 @@ pub(crate) enum Never {}
 
 /// Re-exports of HKT markers for types that have provided implementations
 pub mod hkt {
+  pub use crate::impls::identity::hkt::Id;
   pub use crate::impls::option::hkt::Option;
   pub use crate::impls::result::hkt::{Result, ResultOk};
   pub use crate::impls::vec::hkt::Vec;
-  pub use crate::impls::identity::hkt::Id;
 
   /// std
   pub mod std {
-      /// std::io
-  pub mod io {
-    /// Result pinned to [`std::io::Error`]
-    pub type Result = crate::impls::result::hkt::ResultOk<std::io::Error>;
-  }
+    /// std::io
+    pub mod io {
+      /// Result pinned to [`std::io::Error`]
+      pub type Result = crate::impls::result::hkt::ResultOk<std::io::Error>;
+    }
   }
 }
 
 /// Glob import that provides all of the `naan` typeclasses
 pub mod prelude {
-  pub use crate::Equiv;
   pub use crate::alt::*;
   pub use crate::apply::*;
   pub use crate::bifunctor::*;
@@ -703,12 +702,12 @@ pub mod prelude {
   pub use crate::fun::curry3::*;
   pub use crate::fun::*;
   pub use crate::functor::*;
+  // pub use crate::io::*;
+  pub use crate::impls::identity::*;
   pub use crate::monad::*;
   pub use crate::semigroup::*;
   pub use crate::traverse::*;
-  // pub use crate::io::*;
-  pub use crate::impls::identity::*;
-  pub use crate::{deriving, hkt, HKT1, HKT2};
+  pub use crate::{deriving, hkt, Equiv, HKT1, HKT2};
 }
 
 /// An `Equiv` type is one that has a simpler equivalent
@@ -718,7 +717,7 @@ pub mod prelude {
 /// In the following example, `iter` `map` and `filter` are all
 /// conceptually "an iterator over `usize`"
 /// ```
-/// use std::iter::{Map, Filter};
+/// use std::iter::{Filter, Map};
 ///
 /// let vec: Vec<usize> = vec![1, 2, 3, 4, 5];
 /// let iter: std::vec::IntoIter<usize> = vec.into_iter();
