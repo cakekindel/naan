@@ -22,10 +22,10 @@ impl<A> Functor<hkt::Vec, A> for Vec<A> {
 }
 
 impl<AB> Apply<hkt::Vec, AB> for Vec<AB> {
-  fn apply_clone_with<A, B, Cloner>(self,
-                                    a: <hkt::Vec as HKT1>::T<A>,
-                                    cloner: Cloner)
-                                    -> <hkt::Vec as HKT1>::T<B>
+  fn apply_with<A, B, Cloner>(self,
+                              a: <hkt::Vec as HKT1>::T<A>,
+                              cloner: Cloner)
+                              -> <hkt::Vec as HKT1>::T<B>
     where AB: F1<A, Ret = B>,
           Cloner: for<'a> F1<&'a A, Ret = A>
   {

@@ -143,7 +143,7 @@ impl<T> Applicative<hkt::Id, T> for Id<T> {
 }
 
 impl<T> Alt<hkt::Id, T> for Id<T> {
-  fn alt(self, b: Self) -> Self {
+  fn alt(self, _: Self) -> Self {
     self
   }
 }

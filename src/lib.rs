@@ -666,6 +666,9 @@ pub mod functor;
 /// Implementors
 pub mod impls;
 
+/// Lazy managed effects
+pub mod io;
+
 /// Semigroup, Monoid
 pub mod semigroup;
 
@@ -702,16 +705,19 @@ pub mod prelude {
   pub use crate::fun::curry3::*;
   pub use crate::fun::*;
   pub use crate::functor::*;
-  // pub use crate::io::*;
   pub use crate::impls::identity::*;
+  pub use crate::io::*;
   pub use crate::monad::*;
   pub use crate::semigroup::*;
   pub use crate::traverse::*;
   pub use crate::{deriving, hkt, Equiv, HKT1, HKT2};
 }
 
-/// An `Equiv` type is one that has a simpler equivalent
-/// representation.
+/// An `Equiv` type is one that is conceptually the same as some
+/// different type.
+///
+/// This is used to allow types to implement typeclasses for other types
+/// in a still strict way. For examples see [`functor::FunctorSurrogate`], [`monad::MonadSurrogate`]
 ///
 /// # Example - Iterators
 /// In the following example, `iter` `map` and `filter` are all
@@ -735,7 +741,7 @@ pub mod prelude {
 /// * `Result<A, Infallible>` is `Equiv::To` `Result<A, !>` (and vice versa)
 /// * `IO<Lazy>` is `Equiv::To` `IO<Lazy::T>` (`IO<Suspend<_, usize>>` == `IO<usize>`)
 pub trait Equiv {
-  /// The type that `Self` is equivalent to
+  /// The target that `Self` is conceptually equivalent to
   type To;
 }
 
@@ -820,7 +826,7 @@ macro_rules! deriving {
   };
   (impl$(<$($vars:ident),+>)? Apply<$hkt:ty, $ab:ident> for $t:ty {..ApplyOnce}) => {
     impl<$ab, $($($vars),+)?> Apply<$hkt, $ab> for $t {
-  fn apply_clone_with<A, B, Cloner>(self, a: <$hkt as HKT1>::T<A>, _: Cloner) -> <$hkt as HKT1>::T<B>
+  fn apply_with<A, B, Cloner>(self, a: <$hkt as HKT1>::T<A>, _: Cloner) -> <$hkt as HKT1>::T<B>
       where AB: F1<A, Ret = B>,
             Cloner: for<'a> F1<&'a A, Ret = A>
             {

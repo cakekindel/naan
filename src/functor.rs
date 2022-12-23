@@ -42,7 +42,32 @@ pub trait FunctorOnce<F, A>
 pub trait Functor<F, A>
   where F: HKT1<T<A> = Self>
 {
-  /// See [`Functor`]
+  /// Use a function from `A -> B` to transform an
+  /// `F<A>` to an `F<B>`.
   fn fmap<AB, B>(self, f: AB) -> F::T<B>
     where AB: F1<A, Ret = B>;
+}
+
+/// [`Functor`] but with looser type constraints,
+/// allowing for blanket [`Functor`] implementations
+/// on types [`Equiv`]alent to `F<A>`
+pub trait FunctorSurrogate<F, A>
+  where F: HKT1,
+        Self: Equiv<To = F::T<A>>
+{
+  /// Type yielded by `fmap` that is akin to `F::T<B>`.
+  ///
+  /// The output type may use both type parameters, or only one.
+  ///
+  /// The reason we allow the output to be parameterized by `AB` (the function from `A -> B`)
+  /// is so that the returning type can store **the function** and defer transformation.
+  ///
+  /// This allows implementing lazy functors with no heap dependency (ex. [`IO`])
+  type Output<AB, B>;
+
+  /// Use a function from `A -> B` to transform something
+  /// akin to `F<A>` to something akin to `F<B>`.
+  fn map_<AB, B>(self, f: AB) -> Self::Output<AB, B>
+    where AB: F1<A, Ret = B>,
+          Self::Output<AB, B>: Equiv<To = F::T<B>>;
 }
