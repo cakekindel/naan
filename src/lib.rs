@@ -626,7 +626,7 @@
 //! ## Lazy IO
 
 // docs
-#![doc(html_root_url = "https://docs.rs/naan/0.1.21")]
+#![doc(html_root_url = "https://docs.rs/naan/0.1.22")]
 #![cfg_attr(any(docsrs, feature = "docs"), feature(doc_cfg))]
 // -
 // deny
