@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.22 (2022-12-24)
+
+
+### Features
+
+* lazy io ([#1](https://github.com/cakekindel/naan/issues/1)) ([3e3fb55](https://github.com/cakekindel/naan/commit/3e3fb5518fc9f6f8b73a93c2636227f6605e449c))
+
 ### 0.1.21 (2022-12-20)
 
 
