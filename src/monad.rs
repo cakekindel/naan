@@ -54,3 +54,28 @@ pub trait Monad<M, A>
     self.bind::<AA, _>(|s| s)
   }
 }
+
+/// [`Monad`] but with looser type constraints,
+/// allowing for blanket [`Monad`] implementations
+/// on types [`Equiv`]alent to `M<A>`
+pub trait MonadSurrogate<M, A>
+  where Self: Equiv<To = M::T<A>> + ApplicativeSurrogate<M, A>,
+        M: HKT1
+{
+  /// Type yielded by `bind_` that isn't _exactly_ `M::T<B>`, but
+  /// is conceptually [`Equiv`]alent.
+  ///
+  /// The output type may use both type parameters, or only one.
+  ///
+  /// The reason we allow the output to be parameterized by `AMB` (the function from `A -> Self<B>`)
+  /// is so that the returning type can store **the function** and defer transformation.
+  ///
+  /// This allows implementing lazy monads with no heap dependency (ex. [`IO`])
+  type BindOutput<B, AMB>;
+
+  /// Use a function from `A -> M<B>` to transform something
+  /// akin to `M<A>` to something akin to `M<B>`.
+  fn bind_<B, AMB>(self, f: AMB) -> Self::BindOutput<B, AMB>
+    where AMB: F1<A, Ret = M::T<B>>,
+          Self::BindOutput<B, AMB>: Equiv<To = M::T<B>>;
+}
