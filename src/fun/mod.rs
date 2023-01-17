@@ -130,7 +130,7 @@ pub trait F1Once<A> {
   ///
   /// fn main() {
   ///   let dir_contains_readme =
-  ///     compose2(ensure_trailing_slash, |path| format!("{path}README.md")).chain(PathBuf::from)
+  ///     ensure_trailing_slash.chain(|path| format!("{path}README.md")).chain(PathBuf::from)
   ///                                                                       .chain(Path::exists);
   ///
   ///   assert!(dir_contains_readme.call("toad-lib/toad/toad"));
@@ -159,10 +159,10 @@ pub trait F1Once<A> {
   /// # }
   /// fn main() {
   ///   let dir_contains_readme =
-  ///     compose2(ensure_trailing_slash, |path| format!("{path}README.md")).chain(PathBuf::from)
-  ///                                                                       .chain(Path::exists);
+  ///     ensure_trailing_slash.chain(|path| format!("{path}README.md")).chain(PathBuf::from)
+  ///                                                                   .chain(Path::exists);
   ///
-  ///   let dir_contains_readme_boxed: Box<dyn F1<&str, bool>> = Box::new(dir_contains_readme) as _;
+  ///   let dir_contains_readme_boxed: Box<dyn F1<&str, Ret = bool>> = Box::new(dir_contains_readme) as _;
   ///
   ///   assert!(dir_contains_readme_boxed.call("toad-lib/toad/toad"));
   /// }

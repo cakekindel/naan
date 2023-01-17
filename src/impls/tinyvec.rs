@@ -8,6 +8,9 @@ use crate::prelude::*;
 pub mod hkt {
   use super::*;
 
+  /// [`tinyvec::ArrayVec`] lifted to an HKT1
+  ///
+  /// (Kind `Type -> Type`)
   pub struct ArrayVec<const N: usize>;
   impl<const N: usize> HKT1 for ArrayVec<N> {
     type T<A> = tinyvec::ArrayVec<[Option<A>; N]>;
@@ -24,9 +27,9 @@ impl<const N: usize, A> Functor<hkt::ArrayVec<N>, A> for ArrayVec<[Option<A>; N]
 
 impl<const N: usize, AB> Apply<hkt::ArrayVec<N>, AB> for ArrayVec<[Option<AB>; N]> {
   fn apply_with<A, B, Cloner>(self,
-                                    as_: ArrayVec<[Option<A>; N]>,
-                                    clone: Cloner)
-                                    -> ArrayVec<[Option<B>; N]>
+                              as_: ArrayVec<[Option<A>; N]>,
+                              clone: Cloner)
+                              -> ArrayVec<[Option<B>; N]>
     where AB: F1<A, Ret = B>,
           Cloner: for<'a> F1<&'a A, Ret = A>
   {
@@ -184,7 +187,8 @@ impl<A, const N: usize> Monad<hkt::ArrayVec<N>, A> for ArrayVec<[Option<A>; N]> 
   }
 }
 
-#[cfg(test)] mod tests {
+#[cfg(test)]
+mod tests {
   use super::*;
 
   #[test]
@@ -203,7 +207,9 @@ impl<A, const N: usize> Monad<hkt::ArrayVec<N>, A> for ArrayVec<[Option<A>; N]> 
     type R = Result<u32, ()>;
     type RV = tinyvec::ArrayVec<[Option<R>; 32]>;
 
-    let rv = RV::empty().append(RV::pure(R::Ok(1))).append(RV::pure(R::Ok(2)));
-    assert_eq!(rv.sequence::<crate::hkt::ResultOk<()>>(), Result::<V, ()>::Ok(tinyvec::array_vec!(_ => Some(1), Some(2))));
+    let rv = RV::empty().append(RV::pure(R::Ok(1)))
+                        .append(RV::pure(R::Ok(2)));
+    assert_eq!(rv.sequence::<crate::hkt::ResultOk<()>>(),
+               Result::<V, ()>::Ok(tinyvec::array_vec!(_ => Some(1), Some(2))));
   }
 }
