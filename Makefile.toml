@@ -18,7 +18,7 @@ dependencies = ["install-fmt"]
 
 [tasks.test]
 command = "cargo"
-args = ["--locked", "test", "--", "--quiet", "--show-output"]
+args = ["--locked", "test", "--features", "tinyvec", "--", "--quiet", "--show-output"]
 
 [tasks.test-quiet]
 command = "cargo"

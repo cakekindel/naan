@@ -15,3 +15,7 @@ pub mod unit;
 
 /// Vec trait impls
 pub mod vec;
+
+/// [`tinyvec`]
+#[cfg(feature = "tinyvec")]
+pub mod tinyvec;

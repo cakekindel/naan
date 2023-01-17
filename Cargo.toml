@@ -15,5 +15,7 @@ std = ["alloc"]
 alloc = []
 test = []
 docs = []
+tinyvec = ["dep:tinyvec"]
 
 [dependencies]
+tinyvec = {optional = true, version = "1.6.0", features = ["rustc_1_57"]}
