@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.26 (2023-01-18)
+
+
+### Features
+
+* hkt2 for btree_map ([a3c0b48](https://github.com/cakekindel/naan/commit/a3c0b481a59f13addab76a2b699e0a5a90d58d80))
+
 ### 0.1.25 (2023-01-18)
 
 
