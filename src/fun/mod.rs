@@ -261,7 +261,7 @@ pub trait F2<A, B>: F2Once<A, B> {
 
 /// A function that accepts 3 arguments
 /// and can be called any number of times.
-pub trait F3<A, B, C, D>: F3Once<A, B, C> {
+pub trait F3<A, B, C>: F3Once<A, B, C> {
   /// Call the function with all arguments
   fn call(&self, a: A, b: B, c: C) -> Self::Ret;
 }
@@ -303,7 +303,7 @@ impl<F, A, B, C> F2Once<A, B> for F where F: FnOnce(A, B) -> C
   }
 }
 
-impl<F, A, B, C, D> F3<A, B, C, D> for F where F: Fn(A, B, C) -> D
+impl<F, A, B, C, D> F3<A, B, C> for F where F: Fn(A, B, C) -> D
 {
   fn call(&self, a: A, b: B, c: C) -> D {
     self(a, b, c)

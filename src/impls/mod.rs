@@ -16,6 +16,9 @@ pub mod unit;
 /// Vec trait impls
 pub mod vec;
 
+/// [`std::collections::HashMap`]
+pub mod hash_map;
+
 /// [`tinyvec`]
 #[cfg(feature = "tinyvec")]
 pub mod tinyvec;

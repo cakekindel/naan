@@ -855,6 +855,42 @@ macro_rules! deriving {
       }
     }
   };
+  (impl$(<$($vars:ident),+>)? FoldableIndexed<$hkt:ty, $idx:ident, $a:ident> for $t:ty {..FoldableOnceIndexed}) => {
+    impl<$a, $($($vars),+)?> FoldableIndexed<$hkt, $idx, $a> for $t {
+      fn foldl_idx<B, BAB>(self, f: BAB, b: B) -> B
+      where BAB: F3<B, $idx, A, Ret = B> {
+        self.fold1_idx(f, b)
+      }
+
+      fn foldr_idx<B, ABB>(self, f: ABB, b: B) -> B
+      where ABB: F3<$idx, A, B, Ret = B> {
+        self.fold1(|x, a, b| f.call(b, x, a), b)
+      }
+
+      fn foldl_ref_idx<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+      where BAB: F3<B, &'a $idx, &'a A, Ret = B>, A: 'a, $idx: 'a {
+        self.fold1_ref(f, b)
+      }
+
+      fn foldr_ref_idx<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
+        where ABB: F3<&'a $idx, &'a A, B, Ret = B>, A: 'a, $idx: 'a {
+        self.fold1_ref(|k, a, b| f.call(b, k, a), b)
+      }
+    }
+  };
+  (impl$(<$($vars:ident),+>)? FoldableOnce<$hkt:ty, $a:ident> for $t:ty {..FoldableOnceIndexed}) => {
+    impl<$a, $($($vars),+)?> FoldableOnce<$hkt, $a> for $t {
+      fn fold1<B, BAB>(self, f: BAB, b: B) -> B
+      where BAB: F2Once<B, A, Ret = B> {
+        self.fold1_idx(|b, _, a| f.call(b, a), b)
+      }
+
+      fn fold1_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
+        where ABB: F2Once<&'a A, B, Ret = B>, A: 'a {
+        self.fold1_idx_ref(|b, _, a| f.call(b, a), b)
+      }
+    }
+  };
   (impl$(<$($vars:ident),+>)? Foldable<$hkt:ty, $a:ident> for $t:ty {..FoldableOnce}) => {
     impl<$a, $($($vars),+)?> Foldable<$hkt, $a> for $t {
       fn foldl<B, BAB>(self, f: BAB, b: B) -> B
@@ -867,18 +903,39 @@ macro_rules! deriving {
         self.fold1(|a, b| f.call(b, a), b)
       }
 
+      fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+      where BAB: F2<B, &'a A, Ret = B>, A: 'a {
+        self.fold1_ref(f, b)
+      }
 
-  /// Fold the data structure from left -> right
-  fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
-  where BAB: F2<B, &'a A, Ret = B>, A: 'a {
-    self.fold1_ref(f, b)
-  }
+      fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
+        where ABB: F2<&'a A, B, Ret = B>, A: 'a {
+        self.fold1_ref(|a, b| f.call(b, a), b)
+      }
+    }
+  };
+  (impl$(<$($vars:ident),+>)? Foldable<$hkt:ty, $a:ident> for $t:ty {..FoldableIndexed}) => {
+    impl<$a, $($($vars),+)?> Foldable<$hkt, $a> for $t {
+      fn foldl<B, BAB>(self, f: BAB, b: B) -> B
+      where BAB: F2<B, A, Ret = B> {
+        self.foldl_idx(|b, _, a| f.call(b, a), b)
+      }
 
-  /// Fold the data structure from right -> left
-  fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
-    where ABB: F2<&'a A, B, Ret = B>, A: 'a {
-    self.fold1_ref(|a, b| f.call(b, a), b)
-    }}
+      fn foldr<B, ABB>(self, f: ABB, b: B) -> B
+      where ABB: F2<A, B, Ret = B> {
+        self.foldr_idx(|_, a, b| f.call(a, b), b)
+      }
+
+      fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+      where BAB: F2<B, &'a A, Ret = B>, A: 'a {
+        self.foldl_idx_ref(|b, _, a| f.call(b, a), b)
+      }
+
+      fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
+        where ABB: F2<&'a A, B, Ret = B>, A: 'a {
+        self.foldr_idx_ref(|_, a, b| f.call(a, b), b)
+      }
+    }
   };
   (impl$(<$($vars:ident),+>)? Traversable<$hkt:ty, $a:ident, $b:ident, $tf:ty> for $t:ty {..TraversableOnce}) => {
     impl<$a, $b, $($($vars),+)?> Traversable<$hkt, $a, $b, $tf> for $t {

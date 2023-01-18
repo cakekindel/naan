@@ -53,33 +53,51 @@ deriving!(impl Plus<hkt::Vec, A> for Vec<A> {..Default});
 deriving!(impl<A> Semigroup for Vec<A> {..Alt});
 deriving!(impl<A> Monoid for Vec<A> {..Default});
 
-impl<A> Foldable<hkt::Vec, A> for Vec<A> {
-  fn foldl<B, BAB>(self, f: BAB, b: B) -> B
-    where BAB: F2<B, A, Ret = B>
+impl<A> FoldableIndexed<hkt::Vec, usize, A> for Vec<A> {
+  fn foldl_idx<B, BAB>(self, f: BAB, b: B) -> B
+    where BAB: F3<B, usize, A, Ret = B>
   {
-    self.into_iter().fold(b, |b, a| f.call(b, a))
+    self.into_iter()
+        .enumerate()
+        .fold(b, |b, (ix, a)| f.call(b, ix, a))
   }
 
-  fn foldr<B, ABB>(self, f: ABB, b: B) -> B
-    where ABB: F2<A, B, Ret = B>
+  /// CHECK: Enumerate yields _indexes_ (not the number of iterations) when
+  /// going backwards in a double ended iterator
+  ///
+  /// ```
+  /// use naan::prelude::*;
+  ///
+  /// vec![0, 1, 2].foldl_idx(|(), ix, val| assert_eq!(ix, val), ());
+  /// vec![0, 1, 2].foldr_idx(|ix, val, ()| assert_eq!(ix, val), ());
+  /// ```
+  fn foldr_idx<B, ABB>(self, f: ABB, b: B) -> B
+    where ABB: F3<usize, A, B, Ret = B>
   {
-    self.into_iter().rfold(b, |b, a| f.call(a, b))
+    self.into_iter()
+        .enumerate()
+        .rfold(b, |b, (ix, a)| f.call(ix, a, b))
   }
 
-  fn foldl_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
-    where BAB: F2<B, &'a A, Ret = B>,
+  fn foldl_idx_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+    where BAB: F3<B, usize, &'a A, Ret = B>,
           A: 'a
   {
-    self.iter().fold(b, |b, a| f.call(b, a))
+    self.iter()
+        .enumerate()
+        .fold(b, |b, (ix, a)| f.call(b, ix, a))
   }
 
-  fn foldr_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
-    where ABB: F2<&'a A, B, Ret = B>,
+  fn foldr_idx_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
+    where ABB: F3<usize, &'a A, B, Ret = B>,
           A: 'a
   {
-    self.iter().rfold(b, |b, a| f.call(a, b))
+    self.iter()
+        .enumerate()
+        .rfold(b, |b, (ix, a)| f.call(ix, a, b))
   }
 }
+deriving!(impl Foldable<hkt::Vec, A> for Vec<A> {..FoldableIndexed});
 
 #[allow(non_camel_case_types)]
 type append<T> = fn(T, Vec<T>) -> Vec<T>;

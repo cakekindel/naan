@@ -1,5 +1,21 @@
 use crate::prelude::*;
 
+/// [`FoldableOnce`] for indexed data structures
+pub trait FoldableOnceIndexed<F, Idx, A>
+  where Self: FoldableOnce<F, A>,
+        F: HKT1<T<A> = Self>
+{
+  /// Fold the data structure
+  fn fold1_idx<B, BAB>(self, f: BAB, b: B) -> B
+    where BAB: F3Once<B, Idx, A, Ret = B>;
+
+  /// Fold the data structure
+  fn fold1_idx_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+    where BAB: F3Once<B, &'a Idx, &'a A, Ret = B>,
+          A: 'a,
+          Idx: 'a;
+}
+
 /// [`Foldable`], but specialized to know at compile-time
 /// that the reducing function will only be called one time.
 pub trait FoldableOnce<F, A>
@@ -42,6 +58,33 @@ pub trait FoldableOnce<F, A>
   {
     self.get_or(Default::default())
   }
+}
+
+/// [`Foldable`] for indexed collections
+pub trait FoldableIndexed<F, Idx, A>
+  where F: HKT1<T<A> = Self>,
+        Self: Foldable<F, A>,
+        Idx: Clone
+{
+  /// Fold the data structure from left -> right
+  fn foldl_idx<B, BAB>(self, f: BAB, b: B) -> B
+    where BAB: F3<B, Idx, A, Ret = B>;
+
+  /// Fold the data structure from right -> left
+  fn foldr_idx<B, ABB>(self, f: ABB, b: B) -> B
+    where ABB: F3<Idx, A, B, Ret = B>;
+
+  /// Fold the data structure from left -> right
+  fn foldl_idx_ref<'a, B, BAB>(&'a self, f: BAB, b: B) -> B
+    where BAB: F3<B, Idx, &'a A, Ret = B>,
+          A: 'a,
+          Idx: 'a;
+
+  /// Fold the data structure from right -> left
+  fn foldr_idx_ref<'a, B, ABB>(&'a self, f: ABB, b: B) -> B
+    where ABB: F3<Idx, &'a A, B, Ret = B>,
+          A: 'a,
+          Idx: 'a;
 }
 
 /// Foldable represents data structures which can be collapsed by
