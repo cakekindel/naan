@@ -4,6 +4,8 @@ version = "0.1.23"
 edition = "2021"
 description = "A fast, easy, and tasty functional programming prelude"
 authors = ["Orion Kindel <cakekindel@gmail.com>"]
+repository = "https://github.com/cakekindel/naan"
+documentation = "https://docs.rs/naan"
 license = "MIT OR Apache-2.0"
 
 [badges]
