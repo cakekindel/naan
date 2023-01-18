@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.23 (2023-01-18)
+
+
+### Features
+
+* btreemap, fix features ([6522adc](https://github.com/cakekindel/naan/commit/6522adcb31c810af35761e0aec65612e91a41bca))
+
 ### 0.1.22 (2022-12-24)
 
 
