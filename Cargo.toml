@@ -20,7 +20,7 @@ docs = ["tinyvec"]
 tinyvec = ["dep:tinyvec"]
 
 [package.metadata.docs.rs]
-rustc-args = ["--cfg", "docsrs", "--features", "docs"]
+features = ["docs"]
 
 [dependencies]
 tinyvec = {optional = true, version = "1.6.0", features = ["rustc_1_57"]}
