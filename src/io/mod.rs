@@ -20,7 +20,7 @@ pub use suspend::*;
 pub mod hkt {
   use crate::prelude::*;
 
-  /// IO<A>
+  /// `IO<A>`
   pub struct IO;
 
   impl HKT1 for IO {

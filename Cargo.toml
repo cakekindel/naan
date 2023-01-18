@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 maintenance = { status = "actively-developed" }
 
 [features]
-default = ["std"]
+default = ["std", "alloc"]
 std = ["alloc"]
 alloc = []
 test = []
@@ -21,6 +21,7 @@ tinyvec = ["dep:tinyvec"]
 
 [package.metadata.docs.rs]
 features = ["docs"]
+rustc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 tinyvec = {optional = true, version = "1.6.0", features = ["rustc_1_57"]}
