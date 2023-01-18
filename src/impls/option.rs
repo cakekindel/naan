@@ -10,7 +10,7 @@ pub mod hkt {
   /// (Kind `Type -> Type`)
   pub struct Option(Never);
   impl HKT1 for Option {
-    type T<A> = ::std::option::Option<A>;
+    type T<A> = ::core::option::Option<A>;
   }
 }
 

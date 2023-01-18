@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 /// Result Kinds
 pub mod hkt {
-  use std::marker::PhantomData;
+  use core::marker::PhantomData;
 
   use super::*;
 
@@ -12,7 +12,7 @@ pub mod hkt {
   /// (Kind `Type -> Type`)
   pub struct ResultOk<E>(PhantomData<E>);
   impl<E> HKT1 for ResultOk<E> {
-    type T<A> = ::std::result::Result<A, E>;
+    type T<A> = ::core::result::Result<A, E>;
   }
 
   /// [`core::result::Result`] lifted to an HKT2
@@ -20,7 +20,7 @@ pub mod hkt {
   /// (Kind `Type -> Type -> Type`)
   pub struct Result;
   impl HKT2 for Result {
-    type T<A, B> = ::std::result::Result<A, B>;
+    type T<A, B> = ::core::result::Result<A, B>;
   }
 }
 

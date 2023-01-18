@@ -81,6 +81,7 @@ pub trait Bifunctor<F, A, B>
   }
 
   /// Wrap this type in [`Join`]
+  #[allow(clippy::self_named_constructors)]
   fn join(self) -> Join<F, Self, A>
     where Self: Sized,
           F: HKT2<T<A, A> = Self>

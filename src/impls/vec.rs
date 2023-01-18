@@ -1,3 +1,6 @@
+use std_alloc::vec;
+use std_alloc::vec::Vec;
+
 use crate::prelude::*;
 
 /// Vec Kinds
@@ -9,7 +12,7 @@ pub mod hkt {
   /// (Kind `Type -> Type`)
   pub struct Vec;
   impl HKT1 for Vec {
-    type T<A> = ::std::vec::Vec<A>;
+    type T<A> = ::std_alloc::vec::Vec<A>;
   }
 }
 
@@ -30,8 +33,7 @@ impl<AB> Apply<hkt::Vec, AB> for Vec<AB> {
           Cloner: for<'a> F1<&'a A, Ret = A>
   {
     self.into_iter()
-        .map(move |f| a.iter().map(|a| f.call(cloner.call(a))).collect::<Vec<B>>())
-        .flatten()
+        .flat_map(move |f| a.iter().map(|a| f.call(cloner.call(a))).collect::<Vec<B>>())
         .collect()
   }
 }

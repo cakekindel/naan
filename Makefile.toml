@@ -38,8 +38,16 @@ args = ["clippy"]
 command = "cargo"
 args = ["doc"]
 
+[tasks.check-no-std]
+command = "cargo"
+args = ["check", "--no-default-features"]
+
+[tasks.check-alloc]
+command = "cargo"
+args = ["check", "--no-default-features", "--features", "alloc"]
+
 [tasks.ci]
-dependencies = ["test", "fmt-check", "clippy-check", "doc-check"]
+dependencies = ["test", "fmt-check", "clippy-check", "doc-check", "check-no-std", "check-alloc"]
 
 [tasks.update-readme]
 script = "cargo install cargo-readme && cargo readme > README.md"

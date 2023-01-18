@@ -301,8 +301,7 @@ pub trait Foldable<F, A>
     where P: F1<&'a A, Ret = bool>,
           A: 'a
   {
-    self.foldl_ref(|pass: bool, cur| if pass && f.call(cur) { true } else { false },
-                   true)
+    self.foldl_ref(|pass: bool, cur| pass && f.call(cur), true)
   }
 
   /// Get the number of elements contained within the structure

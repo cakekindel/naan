@@ -38,6 +38,12 @@ impl<T> Nothing<T> {
   }
 }
 
+impl<T> Default for Nothing<T> {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl<T> Clone for Nothing<T> {
   fn clone(&self) -> Self {
     Self::new()
@@ -273,7 +279,7 @@ impl<F, A, B> F1<A> for F where F: Fn(A) -> B
   }
 }
 
-impl<'a, F, A, B> F1Once<A> for F where F: FnOnce(A) -> B
+impl<F, A, B> F1Once<A> for F where F: FnOnce(A) -> B
 {
   type Ret = B;
 

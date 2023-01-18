@@ -1,3 +1,6 @@
+use std_alloc::format;
+use std_alloc::string::String;
+
 use crate::prelude::*;
 
 impl Semigroup for String {
