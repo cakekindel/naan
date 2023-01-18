@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.25 (2023-01-18)
+
+
+### Features
+
+* hkt2 for hashmap, fix docs ([5822ac3](https://github.com/cakekindel/naan/commit/5822ac3337204eb8d5b4422426622b0d65a7e004))
+
 ### 0.1.24 (2023-01-18)
 
 ### 0.1.23 (2023-01-18)
