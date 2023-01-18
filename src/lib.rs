@@ -685,10 +685,10 @@ pub(crate) enum Never {}
 pub mod hkt {
   #[cfg(feature = "alloc")]
   #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-  pub use crate::impls::btree_map::hkt::BTreeMap;
+  pub use crate::impls::btree_map::hkt::{BTreeMap, BTreeMapValues};
   #[cfg(feature = "std")]
   #[cfg_attr(docsrs, doc(cfg(feature = "std")))]
-  pub use crate::impls::hash_map::hkt::HashMapValues;
+  pub use crate::impls::hash_map::hkt::{HashMap, HashMapValues};
   pub use crate::impls::identity::hkt::Id;
   pub use crate::impls::option::hkt::Option;
   pub use crate::impls::result::hkt::{Result, ResultOk};

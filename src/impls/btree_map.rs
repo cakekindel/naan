@@ -8,19 +8,28 @@ pub mod hkt {
 
   use super::*;
 
+  /// [`std::collections::BTreeMap`] lifted to an HKT2
+  ///
+  /// (Kind `Type -> Type -> Type`)
+  pub struct BTreeMap;
+
+  impl HKT2 for BTreeMap {
+    type T<K, V> = std_alloc::collections::BTreeMap<K, V>;
+  }
+
   /// [`std::collections::BTreeMap`] lifted to an HKT1
   /// with a fixed key type
   ///
   /// (Kind `Type -> Type`)
-  pub struct BTreeMap<K>(PhantomData<K>);
+  pub struct BTreeMapValues<K>(PhantomData<K>);
 
-  impl<K> HKT1 for BTreeMap<K> where K: Ord
+  impl<K> HKT1 for BTreeMapValues<K> where K: Ord
   {
     type T<A> = std_alloc::collections::BTreeMap<K, A>;
   }
 }
 
-impl<K, A> Functor<hkt::BTreeMap<K>, A> for BTreeMap<K, A> where K: Ord
+impl<K, A> Functor<hkt::BTreeMapValues<K>, A> for BTreeMap<K, A> where K: Ord
 {
   fn fmap<AB, B>(self, f: AB) -> BTreeMap<K, B>
     where AB: F1<A, Ret = B>
@@ -29,7 +38,7 @@ impl<K, A> Functor<hkt::BTreeMap<K>, A> for BTreeMap<K, A> where K: Ord
   }
 }
 
-impl<K, AB> Apply<hkt::BTreeMap<K>, AB> for BTreeMap<K, AB> where K: Ord
+impl<K, AB> Apply<hkt::BTreeMapValues<K>, AB> for BTreeMap<K, AB> where K: Ord
 {
   fn apply_with<A, B, Cloner>(self, as_: BTreeMap<K, A>, cloner: Cloner) -> BTreeMap<K, B>
     where AB: F1<A, Ret = B>,
@@ -41,7 +50,7 @@ impl<K, AB> Apply<hkt::BTreeMap<K>, AB> for BTreeMap<K, AB> where K: Ord
   }
 }
 
-impl<K, A> Alt<hkt::BTreeMap<K>, A> for BTreeMap<K, A> where K: Ord
+impl<K, A> Alt<hkt::BTreeMapValues<K>, A> for BTreeMap<K, A> where K: Ord
 {
   /// Combine the two maps, preferring keys from `self` when self
   /// and `b` both have an entry for a given key.
@@ -59,9 +68,9 @@ impl<K, A> Alt<hkt::BTreeMap<K>, A> for BTreeMap<K, A> where K: Ord
   }
 }
 
-impl<K, A> Plus<hkt::BTreeMap<K>, A> for BTreeMap<K, A> where K: Ord
+impl<K, A> Plus<hkt::BTreeMapValues<K>, A> for BTreeMap<K, A> where K: Ord
 {
-  fn empty() -> <hkt::BTreeMap<K> as HKT1>::T<A> {
+  fn empty() -> <hkt::BTreeMapValues<K> as HKT1>::T<A> {
     Default::default()
   }
 }
@@ -80,7 +89,7 @@ impl<K, A> Monoid for BTreeMap<K, A> where K: Ord
   }
 }
 
-impl<A, K> Foldable<hkt::BTreeMap<K>, A> for BTreeMap<K, A> where K: Ord
+impl<A, K> Foldable<hkt::BTreeMapValues<K>, A> for BTreeMap<K, A> where K: Ord
 {
   fn foldl<B, BAB>(self, f: BAB, b: B) -> B
     where BAB: F2<B, A, Ret = B>
@@ -109,7 +118,7 @@ impl<A, K> Foldable<hkt::BTreeMap<K>, A> for BTreeMap<K, A> where K: Ord
   }
 }
 
-impl<A, K> FoldableIndexed<hkt::BTreeMap<K>, K, A> for BTreeMap<K, A> where K: Ord + Clone
+impl<A, K> FoldableIndexed<hkt::BTreeMapValues<K>, K, A> for BTreeMap<K, A> where K: Ord + Clone
 {
   fn foldl_idx<B, BAB>(self, f: BAB, b: B) -> B
     where BAB: F3<B, K, A, Ret = B>
@@ -161,18 +170,18 @@ pub fn insert<K, A>(k: K, a: A, mut map: BTreeMap<K, A>) -> BTreeMap<K, A>
   map
 }
 
-impl<K, A, B> Traversable<hkt::BTreeMap<K>, A, B, insert2<K, B>> for BTreeMap<K, A>
+impl<K, A, B> Traversable<hkt::BTreeMapValues<K>, A, B, insert2<K, B>> for BTreeMap<K, A>
   where K: Clone + Ord,
-        hkt::BTreeMap<K>: HKT1<T<B> = BTreeMap<K, B>>
+        hkt::BTreeMapValues<K>: HKT1<T<B> = BTreeMap<K, B>>
 {
   fn traversem1<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<BTreeMap<K, B>>
     where Ap: HKT1,
-          Self: Foldable<hkt::BTreeMap<K>, A>,
+          Self: Foldable<hkt::BTreeMapValues<K>, A>,
           Ap::T<B>: Applicative<Ap, B> + ApplyOnce<Ap, B>,
           Ap::T<insert2<K, B>>: Applicative<Ap, insert2<K, B>> + ApplyOnce<Ap, insert2<K, B>>,
           Ap::T<BTreeMap<K, B>>: Applicative<Ap, BTreeMap<K, B>> + ApplyOnce<Ap, BTreeMap<K, B>>,
           AtoApOfB: F1<A, Ret = Ap::T<B>>,
-          hkt::BTreeMap<K>: HKT1<T<A> = Self>
+          hkt::BTreeMapValues<K>: HKT1<T<A> = Self>
   {
     self.foldl_idx(|ap, k, a| {
                      let insert = (insert as insert<K, B>).curry().call(k);
@@ -183,13 +192,13 @@ impl<K, A, B> Traversable<hkt::BTreeMap<K>, A, B, insert2<K, B>> for BTreeMap<K,
 
   fn traversemm<Ap, AtoApOfB>(self, f: AtoApOfB) -> Ap::T<BTreeMap<K, B>>
     where Ap: HKT1,
-          Self: Foldable<hkt::BTreeMap<K>, A>,
+          Self: Foldable<hkt::BTreeMapValues<K>, A>,
           B: Clone,
           Ap::T<B>: Applicative<Ap, B>,
           Ap::T<insert2<K, B>>: Applicative<Ap, insert2<K, B>>,
           Ap::T<BTreeMap<K, B>>: Applicative<Ap, BTreeMap<K, B>>,
           AtoApOfB: F1<A, Ret = Ap::T<B>>,
-          hkt::BTreeMap<K>: HKT1<T<A> = Self>
+          hkt::BTreeMapValues<K>: HKT1<T<A> = Self>
   {
     self.foldl_idx(|ap, k, a| {
                      let insert = (insert as insert<K, B>).curry().call(k);
