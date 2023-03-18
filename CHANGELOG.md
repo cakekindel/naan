@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.29 (2023-03-18)
+
+
+### Bug Fixes
+
+* F1Once ([adbf765](https://github.com/cakekindel/naan/commit/adbf7655cc59ac23f5689487a69e5b52f923926f))
+
 ### 0.1.28 (2023-03-18)
 
 
