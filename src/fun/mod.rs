@@ -16,11 +16,32 @@ pub mod curry2;
 pub mod curry3;
 
 /// Create a tuple
+///
+/// ```
+/// use naan::prelude::*;
+///
+/// let a = Some("a");
+/// let b = Some(2);
+///
+/// let tup: Option<(&'static str, usize)> = a.and_then(|a| b.map(|b| (a, b)));
+/// let tup: Option<(&'static str, usize)> = Some(tuple2.curry()).apply1(a).apply1(b);
+/// ```
 pub fn tuple2<A, B>(a: A, b: B) -> (A, B) {
   (a, b)
 }
 
 /// Create a 3-tuple
+///
+/// ```
+/// use naan::prelude::*;
+///
+/// let a = Some("a");
+/// let b = Some(2);
+/// let c = Some([1, 2, 3]);
+///
+/// let tup: Option<(&'static str, usize, [usize; 3])> = a.and_then(|a| b.and_then(|b| c.map(|c| (a, b, c))));
+/// let tup: Option<(&'static str, usize, [usize; 3])> = Some(tuple3.curry()).apply1(a).apply1(b).apply1(c);
+/// ```
 pub fn tuple3<A, B, C>(a: A, b: B, c: C) -> (A, B, C) {
   (a, b, c)
 }
