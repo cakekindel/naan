@@ -1,6 +1,6 @@
 [package]
 name = "naan"
-version = "0.1.29"
+version = "0.1.30"
 edition = "2021"
 description = "A fast, easy, and tasty functional programming prelude"
 authors = ["Orion Kindel <cakekindel@gmail.com>"]
