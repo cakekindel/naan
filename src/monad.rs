@@ -9,6 +9,27 @@ pub trait MonadOnce<M, A>: Monad<M, A>
   /// See [`MonadOnce`]
   fn bind1<B, AMB>(self, f: AMB) -> M::T<B>
     where AMB: F1Once<A, Ret = M::T<B>>;
+
+  /// [`MonadOnce::bind1`] that [`Discard`]s the output of the input function
+  fn discard<AMB, B>(self, f: AMB) -> M::T<A>
+    where Self: Sized,
+          B: Discard,
+          AMB: for<'a> F1<&'a A, Ret = M::T<B>>,
+          M::T<B>: MonadOnce<M, B>
+  {
+    self.bind1::<A, _>(|a| f.call1(&a).bind1::<A, _>(|_| M::T::<A>::pure(a)))
+  }
+
+  /// [`MonadOnce::discard`] with mutable access to the data contained
+  /// within the monad
+  fn discard_mut<AMB, B>(self, f: AMB) -> M::T<A>
+    where Self: Sized,
+          B: Discard,
+          AMB: for<'a> F1<&'a mut A, Ret = M::T<B>>,
+          M::T<B>: MonadOnce<M, B>
+  {
+    self.bind1::<A, _>(|mut a| f.call1(&mut a).bind1::<A, _>(|_| M::T::<A>::pure(a)))
+  }
 }
 
 /// `Monad` generalizes the concept of a *sequence of computations*,

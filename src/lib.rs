@@ -649,6 +649,9 @@ extern crate alloc as std_alloc;
 /// Alt, Plus
 pub mod alt;
 
+/// Discard
+pub mod discard;
+
 /// Apply, Applicative
 pub mod apply;
 
@@ -711,6 +714,7 @@ pub mod prelude {
   pub use crate::alt::*;
   pub use crate::apply::*;
   pub use crate::bifunctor::*;
+  pub use crate::discard::*;
   pub use crate::fold::*;
   pub use crate::fun::compose::*;
   pub use crate::fun::curry2::*;
@@ -718,6 +722,7 @@ pub mod prelude {
   pub use crate::fun::*;
   pub use crate::functor::*;
   pub use crate::impls::identity::*;
+  pub use crate::impls::result::ResultExt;
   pub use crate::io::*;
   pub use crate::monad::*;
   pub use crate::semigroup::*;

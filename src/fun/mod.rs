@@ -15,6 +15,16 @@ pub mod curry2;
 /// Currying functions with 3 arguments
 pub mod curry3;
 
+/// Create a tuple
+pub fn tuple2<A, B>(a: A, b: B) -> (A, B) {
+  (a, b)
+}
+
+/// Create a 3-tuple
+pub fn tuple3<A, B, C>(a: A, b: B, c: C) -> (A, B, C) {
+  (a, b, c)
+}
+
 pub(self) mod arg {
   #[allow(unreachable_pub)]
   pub trait Arg {

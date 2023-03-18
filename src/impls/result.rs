@@ -24,6 +24,81 @@ pub mod hkt {
   }
 }
 
+pub trait ResultExt<T, E>
+  where Self: Sized
+{
+  /// Swap the Ok and Err variants
+  fn swap(self) -> Result<E, T>;
+
+  /// Allows turning an Err back into Ok by binding on the Err variant
+  fn recover<R, F>(self, f: F) -> Result<T, R>
+    where F: F1Once<E, Ret = Result<T, R>>;
+
+  /// Perform some IO when this Result is Err
+  fn discard_err<F, B>(self, f: F) -> Result<T, E>
+    where F: for<'a> F1Once<&'a E, Ret = B>,
+          B: Discard;
+
+  /// Test the data in Ok and turn it into an Err if it doesn't pass a predicate
+  fn filter<P, F>(self, pred: P, on_fail: F) -> Result<T, E>
+    where P: for<'a> F1Once<&'a T, Ret = bool>,
+          F: for<'a> F1Once<&'a T, Ret = E>;
+
+  /// Apply a function from `&T -> Result<R, E>` to this result,
+  /// short-circuiting the first error encountered, and combining
+  /// `T` and `R` if the input Result and return value of the function is Ok
+  fn zip<R, F>(self, f: F) -> Result<(T, R), E>
+    where F: for<'a> F1Once<&'a T, Ret = Result<R, E>>;
+}
+
+impl<T, E> ResultExt<T, E> for Result<T, E> {
+  fn swap(self) -> Result<E, T> {
+    match self {
+      | Ok(t) => Err(t),
+      | Err(e) => Ok(e),
+    }
+  }
+
+  fn recover<R, F>(self, f: F) -> Result<T, R>
+    where F: F1Once<E, Ret = Result<T, R>>
+  {
+    match self {
+      | Ok(t) => Ok(t),
+      | Err(e) => f.call1(e),
+    }
+  }
+
+  fn discard_err<F, B>(self, f: F) -> Result<T, E>
+    where F: for<'a> F1Once<&'a E, Ret = B>,
+          B: Discard
+  {
+    match self {
+      | Ok(t) => Ok(t),
+      | Err(e) => {
+        f.call1(&e);
+        Err(e)
+      },
+    }
+  }
+
+  fn filter<P, F>(self, pred: P, on_fail: F) -> Result<T, E>
+    where P: for<'a> F1Once<&'a T, Ret = bool>,
+          F: for<'a> F1Once<&'a T, Ret = E>
+  {
+    match self {
+      | Ok(t) if pred.call1(&t) => Ok(t),
+      | Ok(t) => Err(on_fail.call1(&t)),
+      | Err(e) => Err(e),
+    }
+  }
+
+  fn zip<R, F>(self, f: F) -> Result<(T, R), E>
+    where F: for<'a> F1Once<&'a T, Ret = Result<R, E>>
+  {
+    self.bind1(|t| f.call1(&t).map(|r| (t, r)))
+  }
+}
+
 impl<A, E> FunctorOnce<hkt::ResultOk<E>, A> for Result<A, E> {
   fn fmap1<AB, B>(self, f: AB) -> Result<B, E>
     where AB: F1Once<A, Ret = B>
