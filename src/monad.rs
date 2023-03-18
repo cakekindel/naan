@@ -25,7 +25,7 @@ pub trait MonadOnce<M, A>: Monad<M, A>
   fn discard_mut<AMB, B>(self, f: AMB) -> M::T<A>
     where Self: Sized,
           B: Discard,
-          AMB: for<'a> F1<&'a mut A, Ret = M::T<B>>,
+          AMB: for<'a> F1Once<&'a mut A, Ret = M::T<B>>,
           M::T<B>: MonadOnce<M, B>
   {
     self.bind1::<A, _>(|mut a| f.call1(&mut a).bind1::<A, _>(|_| M::T::<A>::pure(a)))
