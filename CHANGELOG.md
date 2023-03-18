@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 0.1.28 (2023-03-18)
+
+
+### Features
+
+* result utilities, Monad::discard ([699419a](https://github.com/cakekindel/naan/commit/699419ae519a4f8208f0668d85e629ad547a021d))
+
 ### 0.1.27 (2023-01-18)
 
 ### 0.1.26 (2023-01-18)
