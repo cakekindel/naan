@@ -39,8 +39,10 @@ pub fn tuple2<A, B>(a: A, b: B) -> (A, B) {
 /// let b = Some(2);
 /// let c = Some([1, 2, 3]);
 ///
-/// let tup: Option<(&'static str, usize, [usize; 3])> = a.and_then(|a| b.and_then(|b| c.map(|c| (a, b, c))));
-/// let tup: Option<(&'static str, usize, [usize; 3])> = Some(tuple3.curry()).apply1(a).apply1(b).apply1(c);
+/// let tup: Option<(&'static str, usize, [usize; 3])> =
+///   a.and_then(|a| b.and_then(|b| c.map(|c| (a, b, c))));
+/// let tup: Option<(&'static str, usize, [usize; 3])> =
+///   Some(tuple3.curry()).apply1(a).apply1(b).apply1(c);
 /// ```
 pub fn tuple3<A, B, C>(a: A, b: B, c: C) -> (A, B, C) {
   (a, b, c)
